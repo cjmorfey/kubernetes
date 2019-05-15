@@ -21,7 +21,7 @@ pipeline {
                 sh 'uptime'
             }
         }
-        stage("Second step") {
+        stage("First step") {
             steps {
                 sh 'ansible -i hosts -m ping all'
             }
