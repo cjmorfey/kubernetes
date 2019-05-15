@@ -21,9 +21,9 @@ pipeline {
                 sh 'uptime'
             }
         }
-        stage("Finish step") {
+        stage("ansile") {
             steps {
-                sh "ansible-playbook -i ./ansible/hosts ./ansible/ping.yml"
+                ansiblePlaybook inventory: '/root/kube-cluster/hosts', playbook: 'ping.yml'
             }
         }
     }
