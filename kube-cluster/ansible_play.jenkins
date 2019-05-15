@@ -21,9 +21,9 @@ pipeline {
                 sh 'uptime'
             }
         }
-        stage("First step") {
+        stage("Finish step") {
             steps {
-                sh 'ansible -i hosts -m ping all'
+                sh 'ansible -i /root/kube-cluster/hosts -m ping all'
             }
         }
     }
