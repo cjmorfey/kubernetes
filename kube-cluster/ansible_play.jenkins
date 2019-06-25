@@ -23,7 +23,7 @@ pipeline {
         }
         stage("ansile") {
             steps {
-                sh 'ansible -m ping -i hosts'
+                sh 'ansible -m ping all'
             }
         }
     }
