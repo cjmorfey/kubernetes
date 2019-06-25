@@ -10,10 +10,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
     }
-    environment {
-        PATH = "/usr/bin/:/usr/bin/ansible-playbook:$PATH"
-        ANS_HOME = tool('ansible')
-     }
     stages {
         stage("First step") {
             steps {
@@ -25,25 +21,11 @@ pipeline {
                 sh 'uptime'
             }
         }
-        stage('Ansible Init') {
+        
+        
+        stage('Ansible ping') { 
             steps {
-                script {
-                
-               def tfHome = tool name: 'Ansible'
-                env.PATH = "${tfHome}:${env.PATH}"
-                 sh 'ansible --version'
-                    
-            }
-            }
-        }
-        
-        
-        
-        stage('Ansible Deploy') {
-             
-            steps {
-                sh "echo $PATH"
-               sh "ansible-playbook -i /root/kube-cluster/hosts /root/kube-cluster/ping.yml --extra-vars '{\"mode\" : \"running\"}'"              
+              ansiblePlaybook inventory: '/root/kube-cluster/hosts', playbook: '/root/kube-cluster/ping.yml'            
             }
             }
     }
