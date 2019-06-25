@@ -23,7 +23,7 @@ pipeline {
         }
         stage("ansile") {
             steps {
-                ansible-playbook /root/kube-cluster/ping.yml -i /etc/ansible/hosts
+                sh 'ansible-playbook /root/kube-cluster/ping.yml -i /etc/ansible/hosts'
             }
         }
     }
