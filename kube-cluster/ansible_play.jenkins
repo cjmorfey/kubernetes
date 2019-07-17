@@ -25,7 +25,7 @@ pipeline {
         
         stage('Ansible ping') { 
             steps {
-              ansiblePlaybook inventory: '/root/kube-cluster/hosts', playbook: '/root/kube-cluster/ping.yml'            
+              ansiblePlaybook inventory: 'kube-cluster/hosts', playbook: 'kube-cluster/ping.yml'            
             }
             }
     }
