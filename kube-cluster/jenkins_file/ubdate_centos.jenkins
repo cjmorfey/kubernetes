@@ -1,0 +1,31 @@
+#!groovy
+// Check update properties
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+    }
+    stages {
+        stage("First step") {
+            steps {
+                sh 'hostname'
+            }
+        }
+        stage("Second step") {
+            steps {
+                sh 'uptime'
+            }
+        }
+        stage('Update_Centos') {
+            steps {
+              echo " ==========UPDATING-CENTOS========= "
+              ansiblePlaybook inventory: 'kube-cluster/hosts', playbook: 'kube-cluster/absible_playbook/update_centos.yml'
+            }
+            }
+    }
+}
