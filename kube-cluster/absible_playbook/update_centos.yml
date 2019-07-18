@@ -10,11 +10,11 @@
         register: reboot_hint
     - name: Rebooting ...
       command: shutdown -r now "Reboot required for updated kernel"
-            async: 0
-            poll: 0
-            ignore_errors: true
-            changed_when: "reboot_hint.stdout == 'reboot'"
-            register: rebooting
+      async: 0
+      poll: 0
+      ignore_errors: true
+      changed_when: "reboot_hint.stdout == 'reboot'"
+      register: rebooting
     - name: Wait for computer to reboot...
-         pause: seconds=60
-         when: rebooting|changed
+      pause: seconds=60
+      when: rebooting|changed
