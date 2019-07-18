@@ -6,7 +6,7 @@
         state: latest
     - name: check for reboot hint
       shell: if [ $(rpm -q --last kernel | awk 'NR==1 {print $1}') != kernel-$(uname -r) ]; then echo 'reboot'; else echo 'Kernel is current'; fi
-          ignore_errors: true
+      ignore_errors: true
           register: reboot_hint
     - name: Rebooting ...
       command: shutdown -r now "Reboot required for updated kernel"
