@@ -17,7 +17,7 @@ pipeline {
                 sh 'hostname'
             }
         }
-        stage("Uotime Jenkins Machine") {
+        stage("Uptime Jenkins Machine") {
             steps {
                 sh 'uptime'
             }
@@ -29,4 +29,3 @@ pipeline {
             }
             }
     }
-}
