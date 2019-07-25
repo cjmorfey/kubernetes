@@ -10,13 +10,13 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
     }
-    stages {
+  stages {
         stage("Show Hostname") 
             steps {
                 echo "======HOSTNAME======="
                 sh 'hostname'
             }
-        }
+
         stage("Uptime Jenkins Machine") {
             steps {
                 sh 'uptime'
@@ -28,4 +28,5 @@ pipeline {
               ansiblePlaybook inventory: 'kube-cluster/hosts', playbook: 'kube-cluster/absible_playbook/update_centos.yml'
             }
             }
-    }
+   }
+}
