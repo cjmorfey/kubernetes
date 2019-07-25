@@ -31,7 +31,7 @@ pipeline {
                   inventory: 'kube-cluster/hosts', 
                   playbook: 'kube-cluster/absible_playbook/ping.yml'
                   disableHostKeyChecking: true,
-                  colorized: true)
+                  colorized: true )
                 }
             }
             }
