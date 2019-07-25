@@ -11,13 +11,13 @@ pipeline {
         timestamps()
     }
     stages {
-        stage("First step") {
-            echo "======HOSTNAME======="
+        stage("Show Hostname") 
             steps {
+                echo "======HOSTNAME======="
                 sh 'hostname'
             }
         }
-        stage("Second step") {
+        stage("Uotime Jenkins Machine") {
             steps {
                 sh 'uptime'
             }
