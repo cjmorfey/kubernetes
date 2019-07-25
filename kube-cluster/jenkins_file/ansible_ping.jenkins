@@ -26,7 +26,13 @@ pipeline {
         stage('Ansible ping') { 
             steps {
               echo " ==========PING-HOSTS========= "
-              ansiblePlaybook inventory: 'kube-cluster/hosts', playbook: 'kube-cluster/absible_playbook/ping.yml'
+                ansiColor('xterm'){
+              ansiblePlaybook (
+                  inventory: 'kube-cluster/hosts', 
+                  playbook: 'kube-cluster/absible_playbook/ping.yml'
+                  disableHostKeyChecking: true,
+                  colorized: true)
+                }
             }
             }
     }
