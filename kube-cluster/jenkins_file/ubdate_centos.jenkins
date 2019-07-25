@@ -11,12 +11,12 @@ pipeline {
         timestamps()
     }
   stages {
-        stage("Show Hostname") 
+        stage("Show Hostname") {
             steps {
                 echo "======HOSTNAME======="
                 sh 'hostname'
             }
-
+        }
         stage("Uptime Jenkins Machine") {
             steps {
                 sh 'uptime'
@@ -27,6 +27,6 @@ pipeline {
               echo " ==========UPDATING-CENTOS========= "
               ansiblePlaybook inventory: 'kube-cluster/hosts', playbook: 'kube-cluster/absible_playbook/update_centos.yml'
             }
-            }
+         }
    }
 }
