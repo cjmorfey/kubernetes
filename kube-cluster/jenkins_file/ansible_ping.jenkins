@@ -19,7 +19,7 @@ pipeline {
         }
         stage("Second step") {
             steps {
-                sh 'export ANSIBLE_FORCE_COLOR=true'
+                sh 'uptime'
             }
         }
         
@@ -27,6 +27,7 @@ pipeline {
         stage('Ansible ping') { 
             steps {
               echo " ==========PING-HOSTS========= "
+              export ANSIBLE_FORCE_COLOR=true
 
               sh 'ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
               }
