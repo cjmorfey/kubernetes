@@ -11,6 +11,7 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
+        ansiColor("xterm")
     }
     stages {
         stage("First step") {
@@ -25,7 +26,10 @@ pipeline {
         }
         
         
-        stage('Ansible ping') { 
+        stage('Ansible ping') {
+            environment {
+                    ANSIBLE_FORCE_COLOR = true
+                  }
             steps {
               echo " ==========PING-HOSTS========= "
               ansiColor('xterm') {
