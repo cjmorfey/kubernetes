@@ -2,3 +2,4 @@
   gather_facts: false
   tasks:
     - ping:
+    - ignore_errors: True
