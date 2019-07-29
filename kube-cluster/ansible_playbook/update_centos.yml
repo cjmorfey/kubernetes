@@ -17,5 +17,5 @@
       changed_when: "reboot_hint.stdout == 'reboot'"
       register: rebooting
     - name: Wait for computer to reboot...
-      pause: seconds=60
+      pause: seconds=180
       when: rebooting|changed
