@@ -6,7 +6,7 @@ pipeline {
     agent {
         label 'master'
     }
-    export ANSIBLE_FORCE_COLOR=true
+
     triggers { pollSCM('10 * * * *') }
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
@@ -29,7 +29,8 @@ pipeline {
             steps {
               echo " ==========PING-HOSTS========= "
 
-              sh 'ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
+              sh 'export ANSIBLE_FORCE_COLOR=true
+              ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
               }
             }
     }
