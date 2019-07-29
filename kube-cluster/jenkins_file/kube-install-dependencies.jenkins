@@ -11,6 +11,7 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
+        ansiColor("xterm")
     }
     stages {
         stage("===Ansible_Hosts===") {
@@ -26,6 +27,9 @@ pipeline {
 
 
         stage('Install dependencies') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+              }
             steps {
               echo " ==========Install-dependencies========= "
 

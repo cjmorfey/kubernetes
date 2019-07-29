@@ -10,6 +10,7 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
+        ansiColor("xterm")
     }
   stages {
         stage("Show Hostname") {
@@ -24,6 +25,9 @@ pipeline {
             }
         }
         stage('Update_Centos') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+              }
             steps {
               echo " ==========UPDATING-CENTOS========= "
               sh 'ansible-playbook kube-cluster/ansible_playbook/update_centos.yml -i kube-cluster/hosts'
