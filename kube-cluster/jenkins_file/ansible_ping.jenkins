@@ -27,9 +27,8 @@ pipeline {
         stage('Ansible ping') { 
             steps {
               echo " ==========PING-HOSTS========= "
-              sh 'export ANSIBLE_FORCE_COLOR=true'
 
-              sh 'ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
+              sh 'export ANSIBLE_FORCE_COLOR=true; ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
               }
             }
     }
