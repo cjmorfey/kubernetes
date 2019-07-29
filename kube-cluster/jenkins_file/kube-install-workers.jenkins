@@ -1,0 +1,36 @@
+#!groovy
+// install workers
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+    }
+    stages {
+        stage("===Ansible_Hosts===") {
+            steps {
+                sh 'hostname'
+            }
+        }
+        stage("WorkTime") {
+            steps {
+                sh 'uptime'
+            }
+        }
+
+
+        stage('Install dependencies') {
+            steps {
+              echo " ==========Install-workers-Nodes========= "
+
+              sh 'ansible-playbook kube-cluster/ansible_playbook/workers.yml -i kube-cluster/hosts'
+              }
+        }
+    }
+}
