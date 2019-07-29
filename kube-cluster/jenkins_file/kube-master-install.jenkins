@@ -1,0 +1,37 @@
+#!groovy
+// Install master
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+    }
+    stages {
+        stage("First step") {
+            steps {
+                sh 'hostname'
+            }
+        }
+        stage("Second step") {
+            steps {
+                sh 'uptime'
+            }
+        }
+
+
+        stage('Ansible ping') {
+            steps {
+              echo " ==========Install- Master Node========= "
+
+              sh 'ansible-playbook kube-cluster/ansible_playbook/master.yml -i kube-cluster/hosts'
+
+              }
+            }
+    }
+}
