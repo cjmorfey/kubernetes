@@ -25,7 +25,7 @@ pipeline {
         stage('Update_Centos') {
             steps {
               echo " ==========UPDATING-CENTOS========= "
-              ansiblePlaybook inventory: 'kube-cluster/hosts', playbook: 'kube-cluster/absible_playbook/update_centos.yml'
+              ansiblePlaybook inventory: 'kube-cluster/hosts', playbook: 'kube-cluster/ansible_playbook/update_centos.yml'
             }
          }
    }
