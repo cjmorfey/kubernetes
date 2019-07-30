@@ -19,3 +19,11 @@
     - name: remove Folders etc
       shell: rm -rf /etc/docker /etc/kubernetes
 
+- hosts: master
+  become: yes
+  tasks:
+    - name: remove kubectl
+      yum:
+        name: kubectl-1.14.0
+        state: removed
+
