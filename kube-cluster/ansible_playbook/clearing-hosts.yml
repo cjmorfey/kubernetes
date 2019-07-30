@@ -1,0 +1,21 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: remove Docker
+      yum:
+        name: docker
+        state: removed
+        update_cache: true
+
+    - name: remove kubelet
+      yum:
+        name: kubelet
+        state: removed
+        update_cache: true
+
+    - name: remove Folders lib
+      shell: rm -rf /var/lib/docker
+
+    - name: remove Folders etc
+      shell: rm -rf /etc/docker /etc/kubernetes
+

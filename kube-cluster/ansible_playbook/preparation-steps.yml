@@ -43,11 +43,6 @@
         name: kubeadm-1.14.0
         state: present
 
-    - name: start kubelet
-      service:
-        name: kubelet
-        enabled: yes
-        state: started
 
 - hosts: master
   become: yes
