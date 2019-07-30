@@ -21,7 +21,7 @@ pipeline {
             steps {
               echo " ==========Tests========= "
 
-              sh 'ansible-playbook kube-cluster/ansible_playbook/preparations-steps.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible_playbook/preparation-steps.yml -i kube-cluster/hosts'
 
               }
             }
