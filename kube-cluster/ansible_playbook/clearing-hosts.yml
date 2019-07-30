@@ -24,6 +24,9 @@
   tasks:
     - name: remove kubectl
       yum:
-        name: kubectl-1.14.0
+        name: kubectl
         state: removed
+        update_cache: true
+    - name: remove files
+      shell: rm -rf
 
