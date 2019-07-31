@@ -21,7 +21,7 @@
     - name: wait for ssh again available.
       wait_for_connection:
         delay: 5
-        timeout: 300
+        timeout: 120
 
 
     - name: remove Folders lib
