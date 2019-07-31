@@ -25,11 +25,6 @@
 - hosts: master
   become: yes
   tasks:
-    - name: remove kubectl
-      yum:
-        name: kubectl
-        state: removed
-        update_cache: true
     - name: remove files
       shell: rm -rf /home/centos/.kub/*
 

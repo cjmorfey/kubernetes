@@ -1,40 +1,29 @@
 #!groovy
-// install dependencies
-properties([disableConcurrentBuilds()])
+ // PreParations
+ properties([disableConcurrentBuilds()])
 
-pipeline {
-    agent {
-        label 'master'
-    }
-
-
-    options {
-        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
-        timestamps()
-        ansiColor("xterm")
-    }
-    stages {
-        stage("===Ansible_Hosts===") {
-            steps {
-                sh 'hostname'
-            }
-        }
-        stage("WorkTime") {
-            steps {
-                sh 'uptime'
-            }
-        }
+ pipeline {
+     agent {
+         label 'master'
+     }
 
 
-        stage('Install dependencies') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-              }
-            steps {
-              echo " ==========Install-dependencies========= "
+     options {
+         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+         timestamps()
+         ansiColor("xterm")
+     }
+     stages {
+         stage('Preparations') {
+             environment {
+                     ANSIBLE_FORCE_COLOR = true
+                   }
+             steps {
+               echo " ==========Install Dependencies========= "
 
-              sh 'ansible-playbook kube-cluster/ansible_playbook/kube-dependencies.yml -i kube-cluster/hosts'
-              }
-        }
-    }
-}
+               sh 'ansible-playbook kube-cluster/ansible_playbook/preparation-steps.yml -i kube-cluster/hosts'
+
+               }
+             }
+     }
+ }
