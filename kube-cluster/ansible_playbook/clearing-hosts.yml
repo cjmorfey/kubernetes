@@ -14,7 +14,7 @@
         update_cache: true
 
     - name: remove Folders lib
-      shell: rm -rf /var/lib/docker
+      shell: rm -rf /var/lib/docker /var/lib/dockershim
 
     - name: remove Folders etc
       shell: rm -rf /etc/docker /etc/kubernetes
@@ -27,4 +27,7 @@
   tasks:
     - name: remove files
       shell: rm -rf /home/centos/.kub/*
+
+    - name: remove folders
+      shell: rm -rf /var/lib/kubelet
 
