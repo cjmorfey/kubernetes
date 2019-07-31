@@ -30,9 +30,9 @@
   become: yes
   tasks:
     - name: Restart machine
-        shell: "sleep 5 && sudo shutdown -r now"
-        async: 1
-        poll: 0
+      shell: "sleep 5 && sudo shutdown -r now"
+      async: 1
+      poll: 0
 
     - name: wait for ssh again available.
       wait_for_connection:
