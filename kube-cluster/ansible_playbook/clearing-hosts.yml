@@ -26,15 +26,15 @@
 
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
-      warn: false
+
 
     - name: remove Folders etc
       shell: rm -rf /etc/docker /etc/kubernetes
-      warn: false
+
 
     - name: remove file
       shell: rm -rf /root/*.txt
-      warn: false
+
 
 - hosts: master
   become: yes
