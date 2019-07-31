@@ -2,7 +2,7 @@
   become: yes
   tasks:
     - name: initialize the cluster
-      shell: kubeadm init --pod-network-cidr=10.244.0.0/16 >> cluster_initialized.txt
+      shell: kubeadm init --apiserver-advertise-address=192.168.1.90 --pod-network-cidr=10.244.0.0/16 >> cluster_initialized.txt
       args:
         chdir: $HOME
         creates: cluster_initialized.txt
@@ -22,7 +22,8 @@
     - name: install Pod network
       become: yes
       become_user: centos
-      shell: kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml >> pod_network_setup.txt
+      shell: export kubever=$(kubectl version | base64 | tr -d '\n')
+      shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$kubever" >> pod_network_setup.txt
       args:
         chdir: $HOME
         creates: pod_network_setup.txt
