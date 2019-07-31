@@ -7,6 +7,12 @@
         state: present
         update_cache: true
 
+    - nema: install runc
+      yum:
+        name: runc
+        state: present
+        update_cache: true
+
     - name: start Docker
       service:
         name: docker
