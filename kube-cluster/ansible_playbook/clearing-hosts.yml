@@ -13,16 +13,6 @@
         state: absent
         update_cache: true
 
-    - name: Restart machine
-      shell: "sleep 5 && sudo shutdown -r now"
-      async: 1
-      poll: 0
-
-    - name: wait for ssh again available.
-      wait_for_connection:
-        delay: 5
-        timeout: 120
-
 
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
@@ -39,9 +29,28 @@
 - hosts: master
   become: yes
   tasks:
+    - name: Restart machine
+        shell: "sleep 5 && sudo shutdown -r now"
+        async: 1
+        poll: 0
+
+    - name: wait for ssh again available.
+      wait_for_connection:
+        delay: 5
+        timeout: 120
+      - name: wait for ssh again available.
+        wait_for_connection:
+          delay: 5
+          timeout: 120
+
     - name: remove files
       shell: rm -rf /home/centos/.kub/* /home/centos/*.txt
 
     - name: remove folders
       shell: rm -rf /var/lib/kubelet /var/lib/etcd
+
+    - name: remove Folders lib
+      shell: rm -rf /var/lib/docker /var/lib/dockershim
+
+
 
