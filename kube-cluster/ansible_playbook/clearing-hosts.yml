@@ -19,6 +19,9 @@
     - name: remove Folders etc
       shell: rm -rf /etc/docker /etc/kubernetes
 
+    - name: remove file
+      shell: rm -rf /root/*.txt
+
 - hosts: master
   become: yes
   tasks:
@@ -28,5 +31,5 @@
         state: removed
         update_cache: true
     - name: remove files
-      shell: rm -rf
+      shell: rm -rf /home/centos/.kub/*
 
