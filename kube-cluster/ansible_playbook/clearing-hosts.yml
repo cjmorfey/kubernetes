@@ -26,7 +26,7 @@
   become: yes
   tasks:
     - name: remove files
-      shell: rm -rf /home/centos/.kub/*
+      shell: rm -rf /home/centos/.kub/* /home/centos/*.txt
 
     - name: remove folders
       shell: rm -rf /var/lib/kubelet /var/lib/etcd
