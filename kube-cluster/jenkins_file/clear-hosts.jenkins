@@ -1,0 +1,29 @@
+#!groovy
+// Clear host
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage('Tests Preparations') {
+            environment {
+                    ANSIBLE_FORCE_COLOR = true
+                  }
+            steps {
+              echo " ==========Tests========= "
+
+              sh 'ansible-playbook kube-cluster/ansible_playbook/clearing-hosts.yml -i kube-cluster/hosts'
+
+              }
+            }
+    }
+}
