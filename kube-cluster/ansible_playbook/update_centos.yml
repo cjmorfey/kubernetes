@@ -9,13 +9,15 @@
       shell: if [ $(rpm -q --last kernel | awk 'NR==1 {print $1}') != kernel-$(uname -r) ]; then echo 'reboot'; else echo 'Kernel is current'; fi
       ignore_errors: true
       register: reboot_hint
-    - name: Rebooting ...
-      command: shutdown -r now "Reboot required for updated kernel"
-      async: 0
+
+    - name: Restart machine
+      shell: "sleep 5 && sudo shutdown -r now"
+      async: 1
       poll: 0
-      ignore_errors: true
-      changed_when: "reboot_hint.stdout == 'reboot'"
-      register: rebooting
-    - name: Wait for computer to reboot...
-      pause: seconds=180
-      when: rebooting|changed
+
+    - name: wait for ssh again available.
+      wait_for_connection:
+        connect_timeout: 20
+        sleep: 5
+        delay: 5
+        timeout: 300
