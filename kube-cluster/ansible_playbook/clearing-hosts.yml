@@ -40,7 +40,7 @@
         timeout: 120
 
     - name: remove files
-      shell: rm -rf /home/centos/.kub/* /home/centos/*.txt
+      shell: rm -rf /home/centos/.kube/* /home/centos/*.txt
 
     - name: remove folders
       shell: rm -rf /var/lib/kubelet /var/lib/etcd
