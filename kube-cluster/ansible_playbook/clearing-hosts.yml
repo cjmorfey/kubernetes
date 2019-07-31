@@ -4,13 +4,13 @@
     - name: remove Docker
       yum:
         name: docker
-        state: removed
+        state: absent
         update_cache: true
 
     - name: remove kubelet
       yum:
         name: kubelet
-        state: removed
+        state: absent
         update_cache: true
 
     - name: remove Folders lib
