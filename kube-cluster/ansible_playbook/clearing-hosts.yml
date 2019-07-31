@@ -29,5 +29,5 @@
       shell: rm -rf /home/centos/.kub/*
 
     - name: remove folders
-      shell: rm -rf /var/lib/kubelet
+      shell: rm -rf /var/lib/kubelet /var/lib/etcd
 
