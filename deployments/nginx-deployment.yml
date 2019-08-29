@@ -2,13 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  labels:
-    app: nginx
 spec:
-  replicas: 2
   selector:
     matchLabels:
       app: nginx
+  replicas: 1
   template:
     metadata:
       labels:
@@ -16,6 +14,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: mystery-hub.net/nginx:1.16
+          image: nginx:1.15.9-alpine
           ports:
             - containerPort: 80
+              protocol: TCP
