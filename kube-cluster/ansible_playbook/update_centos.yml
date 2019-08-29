@@ -1,23 +1,42 @@
 - hosts: all
   become: yes
   tasks:
-    - name: "Upgrade all yum packages."
+    - name: check packages for updates
+      shell: yum list updates | awk 'f;/Updated Packages/{f=1;}' | awk '{ print $1 }'
+      changed_when: updates.stdout_lines | length > 0
+      args:
+        warn: false
+        register: updates
+    - name: display count
+      debug:
+          msg: "Found {{ updates.stdout_lines | length }} packages to be updated:\n\n{{ updates.stdout }}"
+    - when: updates.stdout_lines | length > 0
+      block:
+    - name: install updates using yum
       yum:
         name: "*"
         state: latest
-    - name: check for reboot hint
-      shell: if [ $(rpm -q --last kernel | awk 'NR==1 {print $1}') != kernel-$(uname -r) ]; then echo 'reboot'; else echo 'Kernel is current'; fi
+    - name: install yum-utils
+      package:
+        name: yum-utils
+    - name: check if reboot is required
+      shell: needs-restarting -r
+      failed_when: false
+      register: reboot_required
+      changed_when: false
+- when: updates.stdout_lines | length > 0 and reboot_required.rc != 0
+  block:
+    - name: reboot the server if required
+      shell: sleep 3; reboot
       ignore_errors: true
-      register: reboot_hint
-
-    - name: Restart machine
-      shell: "sleep 5 && sudo shutdown -r now"
+      changed_when: false
       async: 1
       poll: 0
-
-    - name: wait for ssh again available.
+    - name: wait for server to come back after reboot
       wait_for_connection:
-        connect_timeout: 20
-        sleep: 5
-        delay: 5
-        timeout: 300
+        timeout: 600
+        delay: 20
+      register: reboot_result
+    - name: reboot time
+      debug:
+        msg: "The system rebooted in {{ reboot_result.elapsed }} seconds."
