@@ -29,7 +29,7 @@ pipeline {
               }
             steps {
               echo " ==========UPDATING-CENTOS========= "
-              sh 'ansible-playbook kube-cluster/ansible_playbook/update_centos.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible_playbook/test-update.yml -i kube-cluster/hosts'
             }
          }
    }
