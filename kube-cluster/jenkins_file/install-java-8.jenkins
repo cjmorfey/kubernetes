@@ -1,0 +1,36 @@
+#!groovy
+// Check update properties
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+  stages {
+        stage("Show Hostname") {
+            steps {
+                echo "======HOSTNAME======="
+                sh 'hostname'
+            }
+        }
+        stage("Uptime Jenkins Machine") {
+            steps {
+                sh 'uptime'
+            }
+        }
+        stage('Update_Centos') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+              }
+            steps {
+              echo " ==========UPDATING-CENTOS========= "
+              sh 'ansible-playbook kube-cluster/ansible_playbook/install-java.yml -i kube-cluster/hosts'
+            }
+         }
+   }
+}
