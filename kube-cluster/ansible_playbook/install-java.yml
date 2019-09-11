@@ -20,3 +20,8 @@
       yum:
         name: java-1.8.0-openjdk
         state: present
+    - name: Java Version
+      shell: java -version
+    - name: Java update-alternatives
+      shell: update-alternatives --config java
+      - set_fact: only_one="1"
