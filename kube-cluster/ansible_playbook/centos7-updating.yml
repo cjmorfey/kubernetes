@@ -10,23 +10,24 @@
 
     - name: display count
       debug:
-        msg: "Found {{ updates.stdout_lines | length }} packages to be updated:{{ updates.stdout }}"
+        msg: "Found {{ updates.stdout_lines | length }} packages to be updated:\n\n{{ updates.stdout }}"
 
+    - when: updates.stdout_lines | length > 0
+      block:
+        - name: install updates using yum
+          yum:
+            name: "*"
+            state: latest
 
-    - name: install updates using yum
-      yum:
-        name: "*"
-        state: latest
+        - name: install yum-utils
+          package:
+            name: yum-utils
 
-    - name: install yum-utils
-      package:
-        name: yum-utils
-
-    - name: check if reboot is required
-      shell: needs-restarting -r
-      failed_when: false
-      register: reboot_required
-      changed_when: false
+        - name: check if reboot is required
+          shell: needs-restarting -r
+          failed_when: false
+          register: reboot_required
+          changed_when: false
 
     - when: updates.stdout_lines | length > 0 and reboot_required.rc != 0
       block:
