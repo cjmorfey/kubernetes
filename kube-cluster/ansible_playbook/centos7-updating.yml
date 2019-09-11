@@ -5,7 +5,7 @@
       shell: yum list updates | awk 'f;/Updated Packages/{f=1;}' | awk '{ print $1 }'
       changed_when: updates.stdout_lines | length > 1
       args:
-        warn: false
+        warn: true
       register: updates
 
     - name: display count
