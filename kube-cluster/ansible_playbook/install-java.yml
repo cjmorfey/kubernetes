@@ -24,4 +24,4 @@
       shell: java -version
     - name: Java update-alternatives
       shell: update-alternatives --config java
-          set_fact: only_one="1"
+      set_fact: only_one="1"
