@@ -3,7 +3,7 @@
   tasks:
     - name: check packages for updates
       shell: yum list updates | awk 'f;/Updated Packages/{f=1;}' | awk '{ print $1 }'
-      changed_when: updates.stdout_lines | length > 0
+      changed_when: updates.stdout_lines | length > 1
       args:
         warn: false
       register: updates
@@ -12,7 +12,7 @@
       debug:
         msg: "Found {{ updates.stdout_lines | length }} packages to be updated:\n\n{{ updates.stdout }}"
 
-    - when: updates.stdout_lines | length > 0
+    - when: updates.stdout_lines | length > 1
       block:
         - name: install updates using yum
           yum:
