@@ -1,0 +1,22 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: check packages for updates
+      shell: yum list updates | awk 'f;/Updated Packages/{f=1;}' | awk '{ print $1 }'
+      changed_when: updates.stdout_lines | length > 0
+      args:
+        warn: false
+      register: updates
+    - name: display count
+      debug:
+        msg: "Found {{ updates.stdout_lines | length }} packages to be updated:\n\n{{ updates.stdout }}"
+    - when: updates.stdout_lines | length > 0
+      block:
+        - name: install updates using yum
+          yum:
+            name: "*"
+            state: latest
+    - name: Install JAVa 8
+      yum:
+        name: java-1.8.0-openjdk
+        state: present
