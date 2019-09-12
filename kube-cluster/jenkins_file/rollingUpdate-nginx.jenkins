@@ -1,0 +1,31 @@
+#!groovy
+// Install master
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'slave'
+    }
+
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("Rolling Update Nginx") {
+            steps {
+                echo " ==========Rolling update========= "
+
+                sh 'kubectl -n webserver get -f /root/workspace/deployments/deploy-nginx/deployments/rollingUpdate_nginx.yaml'
+            }
+        }
+        stage("Create HPA Nginx"){
+            steps {
+                sh 'kubectl apply -f /root/workspace/deployments/deploy-nginx/deployments/hpa_nginx.yaml -n webserver'
+            }
+        }
+
+    }
+}
