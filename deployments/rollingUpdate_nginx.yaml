@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: myregistry.net/nginx:1.17.3
+          image: myregistry.net/nginx:1.16
           ports:
             - containerPort: 80
               protocol: TCP
