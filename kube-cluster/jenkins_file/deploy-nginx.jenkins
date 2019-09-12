@@ -16,7 +16,7 @@ pipeline {
     stages {
         stage("Create Deployment Nginx") {
             steps {
-                sh 'kubectl apply -f https://github.com/cjmorfey/kubernetes/blob/master/deployments/nginx-deployment.yml'
+                sh 'kubectl apply -f /root/workspace/deployments/deploy-nginx/deployments/nginx-deployment.yaml'
             }
         }
         stage("Second step") {
