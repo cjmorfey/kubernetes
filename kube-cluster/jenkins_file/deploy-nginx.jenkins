@@ -24,5 +24,6 @@ pipeline {
                 sh 'kubectl apply -f /root/workspace/deployments/deploy-nginx/deployments/hpa_nginx.yaml -n webserver'
             }
         }
+
     }
 }
