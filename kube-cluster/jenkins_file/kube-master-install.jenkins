@@ -14,24 +14,12 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage("First step") {
-            steps {
-                sh 'hostname'
-            }
-        }
-        stage("Second step") {
-            steps {
-                sh 'uptime'
-            }
-        }
-
-
         stage('Ansible ping') {
             environment {
                     ANSIBLE_FORCE_COLOR = true
                   }
             steps {
-              echo " ==========Install- Master Node========= "
+              echo " ========== Install Master Node ========= "
 
               sh 'ansible-playbook kube-cluster/ansible_playbook/master.yml -i kube-cluster/hosts'
 

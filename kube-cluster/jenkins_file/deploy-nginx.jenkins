@@ -19,10 +19,6 @@ pipeline {
                 sh 'kubectl apply -f /root/workspace/deployments/deploy-nginx/deployments/nginx-deployment.yaml -n webserver --insecure-skip-tls-verify'
             }
         }
-        stage("Second step") {
-            steps {
-                sh 'uptime'
-            }
-        }
+
     }
 }

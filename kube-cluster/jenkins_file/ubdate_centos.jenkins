@@ -12,12 +12,7 @@ pipeline {
         ansiColor("xterm")
     }
   stages {
-        stage("Show Hostname") {
-            steps {
-                echo "======HOSTNAME======="
-                sh 'hostname'
-            }
-        }
+
         stage("Uptime Jenkins Machine") {
             steps {
                 sh 'uptime'
