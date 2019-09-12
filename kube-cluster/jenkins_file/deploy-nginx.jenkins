@@ -16,12 +16,12 @@ pipeline {
     stages {
         stage("Create Deployment Nginx") {
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/deployments/nginx-deployment.yml -o yaml --export --ignore-not-found'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/deployments/nginx-deployment.yaml'
             }
         }
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/deployments/hpa_nginx.yml -o yaml --export --ignore-not-found'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/deployments/hpa_nginx.yaml'
             }
         }
 
