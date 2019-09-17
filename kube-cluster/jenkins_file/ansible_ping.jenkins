@@ -32,10 +32,9 @@ pipeline {
                   }
             steps {
               echo " ==========PING-HOSTS========= "
-              ansiColor('xterm') {
+
               sh 'ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
               }
               }
             }
     }
-}
