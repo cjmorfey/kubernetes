@@ -21,12 +21,26 @@ pipeline {
                 sh 'kubectl create namespace kafka-cluster'
             }
         }
-        stage("Create Deployment Kafka") {
+        stage("Create Deployment ZooKeeper") {
                     steps {
-                        echo "-===== Create Deplopyment Kafka ======-"
+                        echo "-===== Create Deplopyment zooKeeper ======-"
 
-                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/deploy_kafka_cluster/kafka-deployment.yaml'
+                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/deploy_kafka_cluster/zookeeper.yaml'
                     }
-                }
+         }
+        stage("Create Deployment  Kafka-service") {
+                    steps {
+                        echo "-===== Create Deplopyment Kafka-service ======-"
+
+                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/deploy_kafka_cluster/kafka-service.yaml'
+                    }
+        }
+        stage("Create Deployment  Kafka-broker") {
+                    steps {
+                        echo "-===== Create Deplopyment Kafka-broker ======-"
+
+                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/deploy_kafka_cluster/kafka-broker.yaml'
+                    }
+        }
     }
 }
