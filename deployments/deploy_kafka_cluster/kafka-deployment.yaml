@@ -1,0 +1,48 @@
+version: '2'
+
+services:
+  zookeeper:
+    build: .
+    command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+    ports:
+      - 2181:2181
+  kafka1:
+    build:
+      context: .
+      args:
+        brokerId: 1
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties
+    depends_on:
+      - zookeeper
+  kafka2:
+    build:
+      context: .
+      args:
+        brokerId: 2
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties
+    depends_on:
+      - zookeeper
+  kafka3:
+    build:
+      context: .
+      args:
+        brokerId: 3
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties
+    depends_on:
+      - zookeeper
+  producer:
+    build: .
+    command: bash -c "sleep 4 && /kafka/bin/kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 3 --partitions 2 --topic dates && while true; do date | /kafka/bin/kafka-console-producer.sh --broker-list kafka1:9092,kafka2:9092,kafka3:9092 --topic dates; sleep 1; done "
+    depends_on:
+      - zookeeper
+      - kafka1
+      - kafka2
+      - kafka3
+  consumer:
+    build: .
+    command: bash -c "sleep 6 && /kafka/bin/kafka-console-consumer.sh --topic dates --bootstrap-server kafka1:9092,kafka2:9092,kafka3:9092"
+    depends_on:
+      - zookeeper
+      - kafka1
+      - kafka2
+      - kafka3

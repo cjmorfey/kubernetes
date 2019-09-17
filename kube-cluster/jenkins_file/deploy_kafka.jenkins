@@ -1,0 +1,32 @@
+#!groovy
+// Deploy Kafka
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'slave'
+    }
+
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("Create NameSpace") {
+            steps {
+                echo "-====== Create NS kafka-cluister ======-"
+
+                sh 'kubectl create namespace kafka-cluster'
+            }
+        }
+        stage("Create Deployment Kafka") {
+                    steps {
+                        echo "-===== Create Deplopyment Kafka ======-"
+
+                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/deploy_kafka_cluster/kafka-deployment.yaml'
+                    }
+                }
+    }
+}
