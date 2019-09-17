@@ -25,21 +25,21 @@ pipeline {
                     steps {
                         echo "-===== Create Deplopyment zooKeeper ======-"
 
-                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/deploy_kafka_cluster/zookeeper.yaml'
+                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/kafka-cluster-deploy/deployments/deploy_kafka_cluster/zookeeper.yaml'
                     }
          }
         stage("Create Deployment  Kafka-service") {
                     steps {
                         echo "-===== Create Deplopyment Kafka-service ======-"
 
-                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/deploy_kafka_cluster/kafka-service.yaml'
+                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/kafka-cluster-deploy/deployments/deploy_kafka_cluster/kafka-service.yaml'
                     }
         }
         stage("Create Deployment  Kafka-broker") {
                     steps {
                         echo "-===== Create Deplopyment Kafka-broker ======-"
 
-                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/deploy_kafka_cluster/kafka-broker.yaml'
+                        sh 'kubectl -n kafka-cluster apply -f /root/workspace/deployments/kafka-cluster-deploy/deployments/deploy_kafka_cluster/kafka-broker.yaml'
                     }
         }
     }
