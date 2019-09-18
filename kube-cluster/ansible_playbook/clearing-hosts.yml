@@ -13,7 +13,7 @@
         state: absent
         update_cache: true
 
-    - name: Reboot the server for kernel update
+    - name: Reboot the servers
       shell: ( sleep 3 && /sbin/reboot & )
       async: 0
       poll: 0
