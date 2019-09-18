@@ -13,7 +13,7 @@
         state: absent
         update_cache: true
 
-- hosts: master
+- hosts: all
   become: yes
   tasks:
     - name: Restart machine
