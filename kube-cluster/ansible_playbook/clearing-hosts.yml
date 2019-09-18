@@ -13,6 +13,13 @@
         state: absent
         update_cache: true
 
+    - name: remove kubectl
+      yum:
+        name: kubectl
+        state: absent
+        update_cache: true
+
+
     - name: Reboot the servers
       shell: ( sleep 3 && /sbin/reboot & )
       async: 0
