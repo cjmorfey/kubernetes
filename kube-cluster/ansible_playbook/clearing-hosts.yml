@@ -19,7 +19,7 @@
       poll: 0
 
     - name: Wait for the server to reboot
-      local_action: wait_for host="{{ansible_host}}" delay=15 state=started port="{{ansible_port}}" connect_timeout=10 timeout=180
+      local_action: wait_for host=all delay=15 state=started port="{{ansible_port}}" connect_timeout=10 timeout=180
 
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
