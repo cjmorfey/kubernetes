@@ -13,12 +13,13 @@
         state: absent
         update_cache: true
 
-    - name: Reboot servers
-      command: /sbin/reboot
+    - name: Reboot the server for kernel update
+      shell: ( sleep 3 && /sbin/reboot & )
+      async: 0
+      poll: 0
 
-    - name: Wait for the servers to finish rebooting
-      sudo: no
-      local_action: wait_for host="{{ inventory_hostname }}" search_regex=OpenSSH port=22 timeout=300
+    - name: Wait for the server to reboot
+      local_action: wait_for host="{{ansible_host}}" delay=15 state=started port="{{ansible_port}}" connect_timeout=10 timeout=180
 
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
