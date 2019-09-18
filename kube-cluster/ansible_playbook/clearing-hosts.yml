@@ -21,7 +21,7 @@
 
 
     - name: Reboot the servers
-      shell: ( sleep 3 && /sbin/reboot & )
+      shell: ( shutdown -r now )
       async: 0
       poll: 0
 
