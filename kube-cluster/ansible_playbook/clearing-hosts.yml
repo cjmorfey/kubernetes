@@ -21,8 +21,8 @@
 
 
     - name: Reboot the servers
-      msg: "Reboot initiated by Ansible"
       reboot:
+        msg: "Reboot initiated by Ansible"
         reboot_timeout: 60
 
     - name: waiting servers
