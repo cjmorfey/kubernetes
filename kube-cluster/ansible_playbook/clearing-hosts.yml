@@ -21,7 +21,7 @@
 
 
     - name: Reboot the servers
-      shell: ( shutdown -r now )
+      shell: ( sleep 3 && shutdown -r now & )
       async: 0
       poll: 0
 
