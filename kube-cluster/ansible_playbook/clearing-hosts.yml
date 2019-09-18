@@ -28,6 +28,9 @@
     - name: Wait for the server to reboot
       local_action: wait_for host="{{ansible_host}}" delay=20 state=started port=22 connect_timeout=30 timeout=180
 
+    - name: Kill all Process
+      shell: ps -ef | grep 'pause' | grep -v grep | awk '{print $2}' | xargs -r kill -9
+
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
 
