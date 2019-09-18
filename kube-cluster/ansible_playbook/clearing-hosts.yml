@@ -13,10 +13,7 @@
         state: absent
         update_cache: true
 
-- hosts: all
-  become: yes
-  tasks:
-    - name: Restart machine
+    - name: Restart machines
       shell: "sleep 5 && sudo shutdown -r now"
       async: 1
       poll: 0
@@ -28,18 +25,6 @@
         delay: 5
         timeout: 120
 
-    - name: remove files
-      shell: rm -rf /home/centos/.kube/* /home/centos/*.txt
-
-    - name: remove folders
-      shell: rm -rf /var/lib/kubelet /var/lib/etcd
-
-    - name: remove Folders lib
-      shell: rm -rf /var/lib/docker /var/lib/dockershim
-
-- hosts: all
-  become: yes
-  tasks:
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
 
@@ -50,6 +35,19 @@
 
     - name: remove file
       shell: rm -rf /root/*.txt
+
+
+- hosts: master
+  become: yes
+  tasks:
+    - name: remove files
+      shell: rm -rf /home/centos/.kube/* /home/centos/*.txt
+
+    - name: remove folders
+      shell: rm -rf /var/lib/kubelet /var/lib/etcd
+
+    - name: remove Folders lib
+      shell: rm -rf /var/lib/docker /var/lib/dockershim
 
 
 
