@@ -24,6 +24,8 @@
       shell: ( sleep 1 && shutdown -r now & )
       async: 0
       poll: 0
+
+    - name: waiting servers
       local_action: wait_for host="{{ansible_host}}" delay=60 state=started port=22 connect_timeout=60 timeout=180
 
     - name: Kill all Process
