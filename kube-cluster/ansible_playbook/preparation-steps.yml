@@ -19,12 +19,6 @@
         state: present
         update_cache: true
 
-    - name: install NFS-client
-      yum:
-        name: nfs-client
-        state: present
-        update_cache: true
-
     - name: start Docker
       service:
         name: docker
