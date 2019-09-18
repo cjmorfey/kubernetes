@@ -13,17 +13,12 @@
         state: absent
         update_cache: true
 
-    - name: Restart machines
-      shell: "sleep 5 && sudo shutdown -r now"
-      async: 1
-      poll: 0
+    - name: Reboot servers
+      command: /sbin/reboot
 
-    - name: wait for ssh again available.
-      wait_for_connection:
-        connect_timeout: 20
-        sleep: 5
-        delay: 5
-        timeout: 120
+    - name: Wait for the servers to finish rebooting
+      sudo: no
+      local_action: wait_for host="{{ inventory_hostname }}" search_regex=OpenSSH port=22 timeout=300
 
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
