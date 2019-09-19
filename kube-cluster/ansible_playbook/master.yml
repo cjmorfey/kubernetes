@@ -6,6 +6,7 @@
       args:
         chdir: $HOME
         creates: cluster_initialized.txt
+
     - name: create .kube directory
       become: yes
       become_user: root

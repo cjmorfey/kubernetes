@@ -49,7 +49,7 @@
 
     - name: remove file .txt
       file:
-        path: $HOME/*.txt
+        path: /root/*.txt
         state: absent
 
 - hosts: master
