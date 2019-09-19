@@ -53,8 +53,8 @@
 
     - name: remove Folder .kube
       file:
-        path: $HOME/.kube
-        state: absent
+         path: $HOME/.kube
+         state: absent
 
 
 
