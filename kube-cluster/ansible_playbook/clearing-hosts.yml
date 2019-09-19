@@ -51,5 +51,11 @@
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
 
+    - name: remove Folder .kube
+      file:
+        path: $HOME/.kube
+        state: absent
+
+
 
 
