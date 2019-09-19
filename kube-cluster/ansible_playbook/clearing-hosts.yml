@@ -27,34 +27,51 @@
     - name: waiting servers
       local_action: wait_for host="{{ansible_host}}" delay=60 state=started port=22 connect_timeout=60 timeout=180
 
-    - name: remove Folders lib
-      shell: rm -rf /var/lib/docker /var/lib/dockershim
+    - name: remove Folders docker
+      file:
+        path: /var/lib/docker
+        state: absent
 
+    - name: emove Folders dockershim
+      file:
+        path: /var/lib/dockershim
+        state: absent
 
-    - name: remove Folders etc
-      shell: rm -rf /etc/docker /etc/kubernetes
+    - name: remove Folders etc/docker
+      file:
+        path: /etc/docker
+        state: absent
 
+    - name: remove Folders etc/kubernetes
+      file:
+        path: /etc/kubernetes
+        state: absent
 
-    - name: remove file
-      shell: rm -rf /root/*.txt
-
+    - name: remove file .txt
+      file:
+        path: $HOME/*.txt
+        state: absent
 
 - hosts: master
   become: yes
   tasks:
-    - name: remove files
-      shell: rm -rf /home/centos/.kube/* /home/centos/*.txt
+    - name: remove folders kubelet
+      file:
+        path: /var/lib/kubelet
+        state: absent
 
-    - name: remove folders
-      shell: rm -rf /var/lib/kubelet /var/lib/etcd
+    - name: remove folder etcd
+      file:
+        path: /var/lib/etcd
+        state: absent
 
     - name: remove Folders lib
       shell: rm -rf /var/lib/docker /var/lib/dockershim
 
     - name: remove Folder .kube
       file:
-         path: $HOME/.kube
-         state: absent
+        path: $HOME/.kube
+        state: absent
 
 
 
