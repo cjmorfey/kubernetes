@@ -65,8 +65,15 @@
         path: /var/lib/etcd
         state: absent
 
-    - name: remove Folders lib
-      shell: rm -rf /var/lib/docker /var/lib/dockershim
+    - name: remove Folders lib docker
+      file:
+        path: /var/lib/docker
+        state: absent
+
+    - name: remove Folders lib dockershim
+      file:
+        path: /var/lib/dockershim
+        state: absent
 
     - name: remove Folder .kube
       file:
