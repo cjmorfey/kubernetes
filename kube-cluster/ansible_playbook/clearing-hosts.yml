@@ -62,6 +62,11 @@
         path: /root/pod_network_setup.txt
         state: absent
 
+    - name: remove Folder .kube
+      file:
+        path: $HOME/.kube
+        state: absent
+
 - hosts: master
   become: yes
   tasks:
@@ -85,10 +90,6 @@
         path: /var/lib/dockershim
         state: absent
 
-    - name: remove Folder .kube
-      file:
-        path: $HOME/.kube
-        state: absent
 
 
 
