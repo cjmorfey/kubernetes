@@ -60,6 +60,7 @@
     - name: remove pod_network_setup.txt
       file:
         path: /root/pod_network_setup.txt
+        state: absent
 
 - hosts: master
   become: yes
