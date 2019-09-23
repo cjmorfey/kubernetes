@@ -11,6 +11,14 @@
 - hosts: workers
   become: yes
   tasks:
+    - name: create .kube directory
+      become: yes
+      become_user: root
+      file:
+        path: /root/.kube
+        state: directory
+        mode: 0755
+
     - name: rsync conf
       copy:
         src: /opt/kuber-volume/.kube/config
