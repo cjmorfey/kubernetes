@@ -23,9 +23,11 @@
         owner: root
 
     - name: Synchronization config to the remote hosts
-      synchronize:
-        src: /root/.kube
-        dest: /opt/kuber-volume/.kube
+      copy:
+        src: /root/.kube/
+        dest: /opt/kuber-volume/.kube/
+        remote_src: yes
+        owner: root
 
 
     - name: install Pod network
