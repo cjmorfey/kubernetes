@@ -14,12 +14,20 @@
         path: /root/.kube
         state: directory
         mode: 0755
+
     - name: copy admin.conf to user's kube config
       copy:
         src: /etc/kubernetes/admin.conf
         dest: /root/.kube/config
         remote_src: yes
         owner: root
+
+    - name: Synchronization config to the remote hosts
+      synchronize:
+        src: /root/.kube
+        dest: /opt/kuber-volume/.kube
+
+
     - name: install Pod network
       become: yes
       shell: kubectl apply -f https://docs.projectcalico.org/v3.9/manifests/calico.yaml >> pod_network_setup.txt
