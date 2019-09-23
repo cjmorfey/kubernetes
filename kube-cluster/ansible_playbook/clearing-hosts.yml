@@ -47,10 +47,19 @@
         path: /etc/kubernetes
         state: absent
 
-    - name: remove file .txt
+    - name: remove file cluster.txt
       file:
-        path: /root/*.txt
+        path: /root/cluster_initialized.txt
         state: absent
+
+    - name: remove file node_joined.txt
+      file:
+        path: /root/node_joined.txt
+        state: absent
+
+    - name: remove pod_network_setup.txt
+      file:
+        path: /root/pod_network_setup.txt
 
 - hosts: master
   become: yes
