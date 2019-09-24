@@ -3,7 +3,7 @@
   gather_facts: false
   tasks:
     - name: get join command
-      shell: kubeadm token create --print-join-command > $HOME/join_command
+      shell: kubeadm token create --print-join-command > /root/join_command
 
     - name: share join command
       copy:
