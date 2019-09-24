@@ -70,15 +70,6 @@
         name: kubeadm
         state: present
 
-    - name: create /opt/kuber-volume/.kube directory
-      become: yes
-      become_user: root
-      file:
-        path: /opt/kuber-volume/.kube
-        state: directory
-        mode: 0755
-
-
 - hosts: master
   become: yes
   tasks:
