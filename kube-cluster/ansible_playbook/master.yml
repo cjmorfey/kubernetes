@@ -21,6 +21,7 @@
         dest: /root/.kube/config
         remote_src: yes
         owner: root
+        mode: 0777
 
     - name: Synchronization config to the remote hosts
       become: yes
