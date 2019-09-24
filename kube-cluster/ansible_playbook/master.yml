@@ -23,12 +23,8 @@
         owner: root
 
     - name: Synchronization config to the remote hosts
-      copy:
-        src: /root/.kube/
-        dest: /opt/kuber-volume/.kube/
-        remote_src: yes
-        owner: root
-
+      become: yes
+      shell: rsync -acP /root/.kube/ /opt/kuber-volume/.kube/
 
     - name: install Pod network
       become: yes
@@ -36,3 +32,11 @@
       args:
         chdir: $HOME
         creates: pod_network_setup.txt
+
+- hosts: workers
+  become: yes
+  tasks:
+    - name: rsync conf
+      become: yes
+      shell: rsync -acP /opt/kuber-volume/.kube/ $HOME/.kube/
+
