@@ -8,7 +8,7 @@
     - name: share join command
       copy:
         src: join_command
-        dest: /opt/kuber-volume/join_command.sh
+        remote_src: /opt/kuber-volume/join_command.sh
         mode: 0777
 
 - hosts: workers
