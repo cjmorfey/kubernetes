@@ -14,10 +14,11 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        environment {
-                        ANSIBLE_FORCE_COLOR = true
-                        }
+
         stage('Ping cluster') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
 
             steps {
             echo "-==========-PING-HOSTS-==========-"
@@ -26,6 +27,9 @@ pipeline {
             }
         }
         stage('Preparations') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
             steps {
             echo "-==========-Install Dependencies-==========-"
 
@@ -34,6 +38,9 @@ pipeline {
             }
         }
         stage('Install master K8S') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
             steps {
             echo "-==========-Install Master Node-==========- "
 
@@ -41,6 +48,9 @@ pipeline {
             }
          }
         stage('Join to Cluster K8S') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+             }
             steps {
             echo "-==========-Join to Cluster K8S-=========-"
 
