@@ -14,7 +14,11 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
+        environment {
+                        ANSIBLE_FORCE_COLOR = true
+                        }
         stage('Ping cluster') {
+
             steps {
             echo "-==========-PING-HOSTS-==========-"
 
