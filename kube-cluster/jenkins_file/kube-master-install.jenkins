@@ -14,7 +14,7 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage('Ansible ping') {
+        stage('Install master K8S') {
             environment {
                     ANSIBLE_FORCE_COLOR = true
                   }

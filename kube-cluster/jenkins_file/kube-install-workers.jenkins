@@ -1,5 +1,5 @@
 #!groovy
-// install workers
+// join to cluster
 properties([disableConcurrentBuilds()])
 
 pipeline {
@@ -14,12 +14,12 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage('Install dependencies') {
+        stage('Join to cluster K8S') {
         environment {
                 ANSIBLE_FORCE_COLOR = true
               }
             steps {
-              echo " ==========Install-workers-Nodes========= "
+              echo " ==========Join to cluster k8S ========= "
 
               sh 'ansible-playbook kube-cluster/ansible_playbook/workers.yml -i kube-cluster/hosts'
               }

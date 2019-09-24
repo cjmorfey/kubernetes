@@ -1,0 +1,47 @@
+#!groovy
+// install K8S Cluster
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage('Ping cluster') {
+            steps {
+            echo "-==========-PING-HOSTS-==========-"
+
+                sh 'ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
+            }
+        }
+        stage('Preparations') {
+            steps {
+            echo "-==========-Install Dependencies-==========-"
+
+                sh 'ansible-playbook kube-cluster/ansible_playbook/preparation-steps.yml -i kube-cluster/hosts'
+
+            }
+        }
+        stage('Install master K8S') {
+            steps {
+            echo "-==========-Install Master Node-==========- "
+
+                sh 'ansible-playbook kube-cluster/ansible_playbook/master.yml -i kube-cluster/hosts'
+            }
+         }
+        stage('Join to Cluster K8S') {
+            steps {
+            echo "-==========-Join to Cluster K8S-=========-"
+
+                sh 'ansible-playbook kube-cluster/ansible_playbook/workers.yml -i kube-cluster/hosts'
+            }
+        }
+    }
+}
