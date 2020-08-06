@@ -2,10 +2,8 @@
   become: yes
   tasks:
     - name: remove Docker
-      yum:
-        name: docker
-        state: absent
-        update_cache: true
+      become: yes
+      shell: yum remove -y docker-ce-cli docker-ce docker-ce-cli
 
     - name: remove kubelet
       yum:
