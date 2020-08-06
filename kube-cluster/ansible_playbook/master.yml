@@ -29,7 +29,7 @@
 
     - name: install Pod network
       become: yes
-      shell: kubectl apply -f https://docs.projectcalico.org/v3.9/manifests/calico.yaml >> pod_network_setup.txt
+      shell: kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml >> pod_network_setup.txt
       args:
         chdir: $HOME
         creates: pod_network_setup.txt
