@@ -1,0 +1,10 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: add Docker YUM repository
+      yum_repository:
+        name: docker-ce
+        description: docker-ce YUM repository
+        baseurl: https://download.docker.com/linux/centos/docker-ce.repo
+        
+      
