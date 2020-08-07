@@ -2,10 +2,10 @@
   become: yes
   tasks:
      - name: install runc
-      yum:
-        name: runc
-        state: present
-        update_cache: true
+       yum:
+         name: runc
+         state: present
+         update_cache: true
 
     - name: install psmisc
       yum:
