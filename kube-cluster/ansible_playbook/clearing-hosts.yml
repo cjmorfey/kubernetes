@@ -2,9 +2,15 @@
   become: yes
   tasks:
     - name: remove Docker
-      become: yes
-      shell: yum remove -y docker-ce-cli docker-ce docker-ce-cli
-      
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+        - docker-ce
+        - docker-ce-cli
+        state: absent
+        update_cache: true
+        
     - name: remove docker-common
       yum:
         name: docker-common
