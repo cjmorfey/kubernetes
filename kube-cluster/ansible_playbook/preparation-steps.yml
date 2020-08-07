@@ -19,11 +19,9 @@
         state: present
         update_cache: true
 
-    - name: start Docker
-      service:
-        name: docker
-        state: started
-        enabled: yes
+    - name: restart Docker
+      become: yes
+      shell: systemctl restart docker && systemctl enable docker
 
     - name: net.ipv4.ip_forward is set to 1
       sysctl:
