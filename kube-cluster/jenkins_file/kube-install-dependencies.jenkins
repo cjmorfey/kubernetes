@@ -14,6 +14,19 @@
          ansiColor("xterm")
      }
      stages {
+      
+         stage('Docker') {
+             environment {
+                     ANSIBLE_FORCE_COLOR = true
+                   }
+             steps {
+               echo " ==========Install Docker========= "
+
+               sh 'ansible-playbook kube-cluster/ansible_playbook/install_docker.yml -i kube-cluster/hosts'
+
+               }
+             }
+      
          stage('Preparations') {
              environment {
                      ANSIBLE_FORCE_COLOR = true
