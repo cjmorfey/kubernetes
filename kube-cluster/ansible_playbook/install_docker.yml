@@ -7,4 +7,28 @@
         description: docker-ce YUM repository
         baseurl: https://download.docker.com/linux/centos/docker-ce.repo
         
+    - name: upgrade all packages, excluding kernel & foo related packages
+      yum:
+        name: '*'
+        state: latest
+        exclude: kernel*,foo*
+        
+    - name: install docker-ce
+      yum:
+        name: docker-ce
+        state: present
+        update_cache: true
+        
+    - name: install containerd-io
+      yum:
+        name: containerd.io
+        state: present
+        update_cache: true
+        
+    - name: install docker-ce-cli
+      yum:
+        name: docker-ce-cli
+        state: present
+        update_cache: true
+        
       
