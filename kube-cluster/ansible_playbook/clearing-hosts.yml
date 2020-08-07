@@ -4,6 +4,18 @@
     - name: remove Docker
       become: yes
       shell: yum remove -y docker-ce-cli docker-ce docker-ce-cli
+      
+   - name: remove docker-common
+      yum:
+        name: docker-common
+        state: absent
+        update_cache: true
+        
+   - name: remove containerd-io
+     yum:
+       name: containerd.io
+       state: absent
+       update_cache: true
 
     - name: remove kubelet
       yum:
