@@ -14,7 +14,7 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage('Tests Preparations') {
+        stage('Cleaning K8S hosts') {
             environment {
                     ANSIBLE_FORCE_COLOR = true
                   }
