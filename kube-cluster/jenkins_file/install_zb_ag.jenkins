@@ -1,0 +1,40 @@
+#!groovy
+// Check ub1 properties
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+
+    triggers { pollSCM('10 * * * *') }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("First step") {
+            steps {
+                sh 'hostname'
+            }
+        }
+        stage("Second step") {
+            steps {
+                sh 'uptime'
+            }
+        }
+        
+        
+        stage('Install zabbix-agent') {
+            environment {
+                    ANSIBLE_FORCE_COLOR = true
+                  }
+            steps {
+              echo " ==========PING-HOSTS========= "
+
+              sh 'ansible-playbook kube-cluster/ansible_playbook/install_zb_ag.yml -i kube-cluster/hosts'
+              }
+              }
+            }
+    }
