@@ -10,4 +10,4 @@
     - name: change hostname
       shell: sed -i 's/Hostname=Zabbix server/Hostname='{{zabbix_agent_ip}}'/g' /etc/zabbix/zabbix_agentd.conf
     - name: enable zabbix-agent
-      shell: systemctl start zabbix-agent ;systemctl enable zabbix-agent
+      shell: systemctl start zabbix-agent; systemctl enable zabbix-agent
