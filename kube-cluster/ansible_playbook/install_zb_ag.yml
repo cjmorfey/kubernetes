@@ -1,0 +1,13 @@
+# Install ZABBIX Client
+- hosts: all
+  vars: 
+    zabbix_agent_ip: $(hostname)
+  tasks:
+    - name: install zabbix_client
+      shell: rpm -ivh http://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-agent-5.0.3-1.el7.x86_64.rpm
+    - name: Install zabbix agent
+      shell: yum -y update; yum -y install zabbix-agent
+    - name: change hostname
+      shell: sed -i 's/Hostname=Zabbix server/Hostname='{{zabbix_agent_ip}}'/g' /etc/zabbix/zabbix_agentd.conf
+    - name: enable zabbix-agent
+      shell: systemctl start zabbix-agent ;systemctl enable zabbix-agent
