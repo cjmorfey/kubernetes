@@ -2,5 +2,5 @@
   become: yes
   tasks:
     - name: Power-off
-      command: /sbin/shutdown -h now
-      sudo: yes
+      become_user: root
+      shell: /sbin/shutdown -h now
