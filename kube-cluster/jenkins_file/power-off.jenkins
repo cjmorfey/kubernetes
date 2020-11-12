@@ -14,6 +14,16 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
+        def verify() {
+            stage('Verify') {
+                def userInput = input(
+                    id: 'userInput', message: 'POWER OFF ALL VMs', parameters: [
+                    [$class: 'BooleanParameterDefinition', defaultValue: false, description: '', name: 'Please confirm you sure to proceed']])
+                if(!userInput) {
+                error "Build wasn't confirmed"
+            }
+         }
+        }
         stage('shutdown K8S VMs') {
             environment {
                     ANSIBLE_FORCE_COLOR = true
