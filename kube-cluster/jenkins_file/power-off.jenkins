@@ -21,11 +21,11 @@ pipeline {
                   }
             steps {
             timeout(time: 5, unit: "MINUTES") {
-             input {
+             input 
                 message "K8S cluster will be STOPPED!!!"
                 ok "Yes"
                 parameters { booleanParam(name: 'Are you sure!?', defaultValue: false, description: '') }
-            }
+            
             
               echo " ========== Power Off k8s VMs ========= "
 
