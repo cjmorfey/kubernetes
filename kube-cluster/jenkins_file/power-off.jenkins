@@ -20,17 +20,16 @@ pipeline {
                     ANSIBLE_FORCE_COLOR = true
                   }
              input {
-                message "Should we continue?"
-                ok "Yes, I should!"
+                message "K8S cluster will be STOPPED!!!"
+                ok "Yes"
                 parameters { booleanParam(name: 'Are you sure!?', defaultValue: false, description: '') }
             }
             
             steps {
               echo " ========== Power Off k8s VMs ========= "
 
- //             sh 'ansible-playbook kube-cluster/ansible_playbook/power-off.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible_playbook/power-off.yml -i kube-cluster/hosts'
                 
-                sh 'ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
               }
             }
     }
