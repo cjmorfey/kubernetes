@@ -1,0 +1,6 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Power-off
+      command: /sbin/shutdown -h now
+      sudo: yes
