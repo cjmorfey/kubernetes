@@ -1,5 +1,5 @@
 #!groovy
-// Install master
+// Stop VMs
 properties([disableConcurrentBuilds()])
 
 pipeline {
@@ -25,9 +25,7 @@ pipeline {
                 submitter "alice,bob"
                 parameters { booleanParam(name: 'Are you sure!?', defaultValue: false, description: 'great!') }
             }
-            if(!input) {
-            error "Build wasn't confirmed"
-        }
+            
             steps {
               echo " ========== Power Off k8s VMs ========= "
 
