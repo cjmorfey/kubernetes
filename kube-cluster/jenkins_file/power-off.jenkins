@@ -19,6 +19,7 @@ pipeline {
             environment {
                     ANSIBLE_FORCE_COLOR = true
                   }
+            steps {
             timeout(time: 5, unit: "MINUTES") {
              input {
                 message "K8S cluster will be STOPPED!!!"
@@ -32,5 +33,6 @@ pipeline {
                 
               }
             }
+        }
     }
 }
