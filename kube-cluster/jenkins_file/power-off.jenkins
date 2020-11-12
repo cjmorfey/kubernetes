@@ -19,13 +19,13 @@ pipeline {
             environment {
                     ANSIBLE_FORCE_COLOR = true
                   }
+            timeout(time: 5, unit: "MINUTES") {
              input {
                 message "K8S cluster will be STOPPED!!!"
                 ok "Yes"
-                timeout: [time: 30, unit: 'MINUTES']
                 parameters { booleanParam(name: 'Are you sure!?', defaultValue: false, description: '') }
             }
-            steps {
+            
               echo " ========== Power Off k8s VMs ========= "
 
               sh 'ansible-playbook kube-cluster/ansible_playbook/power-off.yml -i kube-cluster/hosts'
