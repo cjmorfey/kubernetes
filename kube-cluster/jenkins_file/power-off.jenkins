@@ -23,14 +23,15 @@ pipeline {
                 message "Should we continue?"
                 ok "Yes, we should."
                 submitter "alice,bob"
-                parameters { booleanParam(name: 'Are you sure!?', defaultValue: false, description: 'great!') }
+                parameters { booleanParam(name: 'Are you sure!?', defaultValue: false, description: '') }
             }
             
             steps {
               echo " ========== Power Off k8s VMs ========= "
 
-              sh 'ansible-playbook kube-cluster/ansible_playbook/power-off.yml -i kube-cluster/hosts'
-
+ //             sh 'ansible-playbook kube-cluster/ansible_playbook/power-off.yml -i kube-cluster/hosts'
+                
+                sh 'ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
               }
             }
     }
