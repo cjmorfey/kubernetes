@@ -13,8 +13,8 @@ pipeline {
         timestamps()
         ansiColor("xterm")
     }
-    stages {
-        def verify() {
+
+    def verify() {
             stage('Verify') {
                 def userInput = input(
                     id: 'userInput', message: 'POWER OFF ALL VMs', parameters: [
@@ -24,6 +24,7 @@ pipeline {
             }
          }
         }
+    stages {
         stage('shutdown K8S VMs') {
             environment {
                     ANSIBLE_FORCE_COLOR = true
