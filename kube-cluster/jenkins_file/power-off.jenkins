@@ -19,14 +19,12 @@ pipeline {
             environment {
                     ANSIBLE_FORCE_COLOR = true
                   }
-            timeout(60){
              input {
                 message "K8S cluster will be STOPPED!!!"
                 ok "Yes"
+                timeout: [time: 30, unit: 'MINUTES']
                 parameters { booleanParam(name: 'Are you sure!?', defaultValue: false, description: '') }
             }
-            }
-            
             steps {
               echo " ========== Power Off k8s VMs ========= "
 
