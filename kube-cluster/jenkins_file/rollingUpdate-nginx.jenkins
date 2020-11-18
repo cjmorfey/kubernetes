@@ -17,7 +17,7 @@ pipeline {
         stage("Git pull") {
             steps {              
                 echo " ==========Git PULL Updataes========= "
-                sh 'cd /root/kubernetes'
+                sh 'git clone https://github.com/cjmorfey/kubernetes.git'
                 sh 'git pull'               
             }
         } 
