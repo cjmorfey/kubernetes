@@ -1,5 +1,5 @@
 apiVersion: apps/v2
-kind: deployment
+kind: Deployment
 metadata:
   name: nginx-lb
 spec:
