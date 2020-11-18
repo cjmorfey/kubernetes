@@ -1,7 +1,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: nginx-hpa
+  name: nginx-lb
 spec:
   scaleTargetRef:
     apiVersion: nginx/latest
