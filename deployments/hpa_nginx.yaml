@@ -5,7 +5,7 @@ metadata:
 spec:
   scaleTargetRef:
     apiVersion: nginx/latest
-    kind: deployment
+    kind: Deployment
     name: nginx-lb
   minReplicas: 10
   maxReplicas: 40
