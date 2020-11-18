@@ -17,11 +17,9 @@ pipeline {
         stage("Git pull") {
             steps {              
                 echo " ==========Git PULL Updataes========= "
-                //sh 'git clone https://github.com/cjmorfey/kubernetes.git'
                 sh 'cd /root/workspace/deployments/roliingUpdate_nginx/kubernetes && git pull'
                 sh 'pwd'
-                sh 'ls -la'
-               // sh 'git pull'               
+                sh 'ls -la'             
             }
         } 
         stage("Rolling Update Nginx") {
@@ -36,16 +34,16 @@ pipeline {
             steps {
                 echo " ==========Rolling update========= "
 
-                sh 'kubectl -n webserver get -f /root/kubernetes/deployments/rollingUpdate_nginx.yaml --ignore-not-found'
+                sh 'kubectl -n webserver get -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --ignore-not-found'
                 sh 'kubectl -n webserver replace --save-config -f -'
-                sh 'kubectl apply -f /root/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false'
+                sh 'kubectl apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false'
 
                 sh 'kubectl -n webserver rollout status deployment nginx-deployment'
             }
         }    
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n webserver apply -f /root/kubernetes/deployments/hpa_nginx.yaml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/hpa_nginx.yaml'
             }
         }
 
