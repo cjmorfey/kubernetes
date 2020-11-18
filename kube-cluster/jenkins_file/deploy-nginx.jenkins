@@ -14,41 +14,35 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage("Git pull") {
-            steps {
-                environment {
-                    ANSIBLE_FORCE_COLOR = true
-                 }
+         stage("Git pull") {
+            steps {              
                 echo " ==========Git PULL Updataes========= "
-
-                sh 'cd /root/kubernetes'
-                sh 'git pull'
-                
+                sh 'cd /root/workspace/deployments/deploy-nginx/kubernetes && git pull'
+                sh 'pwd'
+                sh 'ls -la'             
             }
-        }
+        } 
         stage("Create NS") {
-            
             environment {
-                    ANSIBLE_FORCE_COLOR = true
+                ANSIBLE_FORCE_COLOR = true
             }
             input {
                 message "K8S cluster starting!!!"
                 ok "Yes"
                 parameters { booleanParam(name: 'Are you sure?', defaultValue: false, description: '') }
             }
-            
             steps {
                 sh 'kubectl create namespace webserver'
             }
         }
         stage("Create Deployment Nginx") {
             steps {
-                sh 'kubectl -n webserver apply -f /root/kubernetes/deployments/nginx-deployment.yaml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yaml'
             }
         }
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n webserver apply -f /root/kubernetes/deployments/hpa_nginx.yaml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/hpa_nginx.yaml'
             }
         }
 
