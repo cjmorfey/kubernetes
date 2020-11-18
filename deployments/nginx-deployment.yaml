@@ -1,20 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-lb
+  name: deployment-nginx-lb
 spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
   selector:
     matchLabels:
-      app: nginx
-  replicas: 2
+      application: deployment-nginx-lb
   template:
     metadata:
       labels:
-        app: nginx
+        application: deployment-nginx-lb
     spec:
       containers:
-        - name: nginx
+        - name: nginx-lb-pod
           image: myregistry.net/nginx:latest
           ports:
             - containerPort: 80
               protocol: TCP
+          resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
