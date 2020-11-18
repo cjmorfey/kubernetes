@@ -15,23 +15,20 @@ pipeline {
     }
     stages {
         stage("Git pull") {
-            steps {
-                
+            steps {              
                 echo " ==========Git PULL Updataes========= "
-
                 sh 'cd /root/kubernetes'
-                sh 'git pull'
-                
+                sh 'git pull'               
             }
-        }
-        
+        } 
         stage("Rolling Update Nginx") {
-            steps {
-                input {
-                    message "K8S cluster will be UPDATING!!!"
-                    ok "Yes"
-                    parameters { booleanParam(name: 'Are you sure?', defaultValue: false, description: '') }
-                }
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
+            input {
+                message "K8S cluster will be UPDATING!!!"
+                ok "Yes"
+                parameters { booleanParam(name: 'Are you sure?', defaultValue: false, description: '') }
             }
             steps {
                 echo " ==========Rolling update========= "
