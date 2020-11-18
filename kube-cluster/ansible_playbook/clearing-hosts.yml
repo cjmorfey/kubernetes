@@ -1,6 +1,11 @@
 - hosts: all
   become: yes
   tasks:
+  
+    - name: yum-cleanUp
+      become_user: root
+      shell: yum-complete-transaction --cleanup-only
+      
     - name: remove Docker
       yum:
         name: "{{ packages }}"
