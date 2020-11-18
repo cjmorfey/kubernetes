@@ -1,16 +1,12 @@
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: nginx-lb
+  name: hpa-nginx
 spec:
   scaleTargetRef:
-    apiVersion: nginx/latest
+    apiVersion: apps/v1
     kind: Deployment
-    name: nginx-lb
+    name: deployment-nginx-lb
   minReplicas: 10
   maxReplicas: 40
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: 80
+  targetCPUUtilizationPercentage: 80
