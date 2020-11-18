@@ -18,6 +18,8 @@ pipeline {
             steps {              
                 echo " ==========Git PULL Updataes========= "
                 sh 'git clone https://github.com/cjmorfey/kubernetes.git'
+                sh 'pwd'
+                sh 'ls -la'
                 sh 'git pull'               
             }
         } 
