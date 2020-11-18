@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: nginx
-  replicas: 2
+  replicas: 24
   template:
     metadata:
       labels:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: myregistry.net/nginx:1.16
+          image: myregistry.net/nginx:latest
           ports:
             - containerPort: 80
               protocol: TCP
