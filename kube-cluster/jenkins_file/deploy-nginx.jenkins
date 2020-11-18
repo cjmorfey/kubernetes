@@ -18,6 +18,7 @@ pipeline {
             steps {
                 sh 'kubectl create namespace webserver'
             }
+        }
         stage("Create Deployment Nginx") {
             steps {
                 sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/deployments/nginx-deployment.yaml'
