@@ -14,20 +14,41 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
+        stage("Git pull") {
+            steps {
+                environment {
+                    ANSIBLE_FORCE_COLOR = true
+                 }
+                echo " ==========Git PULL Updataes========= "
+
+                sh 'cd /root/kubernetes'
+                sh 'git pull'
+                
+            }
+        }
+        
         stage("Rolling Update Nginx") {
             steps {
+                environment {
+                    ANSIBLE_FORCE_COLOR = true
+                 }
+                input {
+                    message "K8S cluster will be UPDATING!!!"
+                    ok "Yes"
+                    parameters { booleanParam(name: 'Are you sure?', defaultValue: false, description: '') }
+                }
                 echo " ==========Rolling update========= "
 
-                sh 'kubectl -n webserver get -f /root/workspace/deployments/deploy-nginx/deployments/rollingUpdate_nginx.yaml --ignore-not-found'
+                sh 'kubectl -n webserver get -f /root/kubernetes/deployments/rollingUpdate_nginx.yaml --ignore-not-found'
                 sh 'kubectl -n webserver replace --save-config -f -'
-                sh 'kubectl apply -f /root/workspace/deployments/deploy-nginx/deployments/rollingUpdate_nginx.yaml --record=false'
+                sh 'kubectl apply -f /root/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false'
 
                 sh 'kubectl -n webserver rollout status deployment nginx-deployment'
             }
         }
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/deployments/hpa_nginx.yaml'
+                sh 'kubectl -n webserver apply -f /root/kubernetes/deployments/hpa_nginx.yaml'
             }
         }
 
