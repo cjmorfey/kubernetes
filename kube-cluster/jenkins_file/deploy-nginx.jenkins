@@ -37,12 +37,12 @@ pipeline {
         }
         stage("Create Deployment Nginx") {
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yaml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yml'
             }
         }
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/hpa_nginx.yaml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/hpa_nginx.yml'
             }
         }
 
