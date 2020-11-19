@@ -2,5 +2,7 @@
   become: yes
   tasks:
     - name: Delay shutting down the remote node
-        community.general.shutdown:
-          delay: 10
+      community:
+        general:
+          shutdown:
+            delay: 10
