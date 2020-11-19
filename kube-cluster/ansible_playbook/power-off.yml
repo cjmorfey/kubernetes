@@ -3,5 +3,5 @@
   tasks:
     - name: Power-off
       become_user: root
-      shell: sleep 2 &&  /sbin/shutdown -h now
+      shell: sleep 2 &&  /sbin/shutdown -r now
       ignore_errors: true
