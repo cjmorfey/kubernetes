@@ -29,7 +29,7 @@ pipeline {
             input {
                 message "K8S cluster starting!!!"
                 ok "Yes"
-                parameters { booleanParam(name: '', defaultValue: false) }
+                parameters { booleanParam(name: 'Are you sure?', defaultValue: false) }
             }
             steps {
                 sh 'kubectl create namespace webserver'
