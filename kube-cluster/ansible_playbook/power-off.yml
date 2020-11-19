@@ -6,6 +6,6 @@
       shell: /sbin/shutdown -h now
       
     - name: wait go down 
-      port: 22 
-      state: stopped
+        port: 22 
+        state: stopped
 
