@@ -5,3 +5,9 @@
       become_user: root
       shell: sleep 2 &&  /sbin/shutdown -r now
       ignore_errors: true
+      
+    - name: wait go down
+      wait_for:
+        host: "{{ansible_host}}" 
+        port: 22 
+        state: stopped
