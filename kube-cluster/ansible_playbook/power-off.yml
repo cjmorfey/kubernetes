@@ -1,13 +1,5 @@
 - hosts: all
-  gather_facts: no
   tasks:
-    - name: Power-off
-      become_user: root
-      shell: sleep 2 &&  /sbin/shutdown -r now
-      ignore_errors: true
-      
-    - name: wait go down
-      wait_for:
-        host: "{{ansible_host}}" 
-        port: 22 
-        state: stopped
+  - name: Delay shutting down the remote node
+    community.general.shutdown:
+      delay: 10
