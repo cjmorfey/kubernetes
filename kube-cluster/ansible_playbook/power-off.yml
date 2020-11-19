@@ -3,4 +3,4 @@
   tasks:
     - name: Delay shutting down the remote node
       community.general.shutdown:
-        delay: 10
+          delay: 10
