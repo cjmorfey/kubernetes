@@ -5,7 +5,7 @@
       become_user: root
       shell: /sbin/shutdown -h now
       
-    - name: wait go down 
-        port: 22 
-        state: stopped
+    - name: wait go down l
+      local_action: wait_for host="{{ansible_host}}" delay=10 state=stopped port=22
+   
 
