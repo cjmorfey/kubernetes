@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-nginx-lb
+  name: nginx-lb
 spec:
   replicas: 2
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      application: deployment-nginx-lb
+      application: nginx-lb
   template:
     metadata:
       labels:
-        application: deployment-nginx-lb
+        application: nginx-lb
     spec:
       containers:
         - name: nginx-lb-pod
