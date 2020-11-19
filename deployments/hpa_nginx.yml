@@ -9,5 +9,4 @@ spec:
     name: nginx-lb
   minReplicas: 10
   maxReplicas: 40
-  target:
-    CPUUtilizationPercentage: 80
+  targetCPUUtilizationPercentage: 80
