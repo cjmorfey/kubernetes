@@ -3,9 +3,5 @@
   tasks:
     - name: Power-off
       become_user: root
-      shell: /sbin/shutdown -h now
-      
-    - name: wait go down
-      local_action: wait_for host="{{ansible_host}}" port=22 state=stopped
-   
-
+      shell: sleep 2 &&  /sbin/shutdown -h now
+      ignore_errors: true
