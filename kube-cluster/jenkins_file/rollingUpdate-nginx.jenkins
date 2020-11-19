@@ -43,7 +43,7 @@ pipeline {
         }    
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/hpa_nginx.yaml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/hpa_nginx.yml'
             }
         }
 
