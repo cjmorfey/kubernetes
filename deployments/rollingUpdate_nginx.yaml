@@ -5,12 +5,14 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: nginx
+      app: nginx-lb
   replicas: 24
+  strategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
-        app: nginx
+        app: nginx-lb
     spec:
       containers:
         - name: nginx
