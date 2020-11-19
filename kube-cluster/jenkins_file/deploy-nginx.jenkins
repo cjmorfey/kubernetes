@@ -29,7 +29,7 @@ pipeline {
             input {
                 message "K8S cluster starting!!!"
                 ok "Yes"
-                parameters { booleanParam(name: 'Are you sure?', defaultValue: false, description: '') }
+                parameters { booleanParam(defaultValue: false) }
             }
             steps {
                 sh 'kubectl create namespace webserver'
@@ -37,12 +37,12 @@ pipeline {
         }
         stage("Create Deployment Nginx") {
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yml --validate=false'
             }
         }
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/hpa_nginx.yml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/hpa_nginx.yml --validate=false'
             }
         }
 
