@@ -38,7 +38,7 @@ pipeline {
                 sh 'kubectl -n webserver replace --save-config -f -'
                 sh 'kubectl apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yml --record=false'
 
-                sh 'kubectl -n webserver rollout status deployment nginx-deployment'
+                sh 'kubectl -n webserver rollout status deployment nginx-lb'
             }
         }    
         stage("Create HPA Nginx"){
