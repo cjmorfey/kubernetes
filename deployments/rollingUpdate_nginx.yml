@@ -9,14 +9,18 @@ spec:
   replicas: 24
   strategy:
     type: RollingUpdate
+    rollingUpdate: 
+      maxUnavailable: 1
+      maxSurge: 1
   template:
     metadata:
       labels:
-        app: nginx-lb
+        app: backend
     spec:
       containers:
-        - name: nginx
+        - name: nginx-lb
           image: myregistry.net/nginx:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
               protocol: TCP
