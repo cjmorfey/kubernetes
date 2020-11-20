@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        app: backend 
+        application: nginx-lb
     spec:
       containers:
         - name: nginx-lb-pod
