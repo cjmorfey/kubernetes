@@ -21,7 +21,7 @@ pipeline {
             steps {
               echo " ==========Join to cluster k8S ========= "
 
-              sh 'ansible-playbook kube-cluster/ansible_playbook/workers.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible-playbook/workers.yml -i kube-cluster/hosts'
               }
         }
     }

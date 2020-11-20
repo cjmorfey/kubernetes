@@ -21,7 +21,7 @@ pipeline {
             steps {
               echo " ==========Clearing Hosts========= "
 
-              sh 'ansible-playbook kube-cluster/ansible_playbook/clearing-hosts.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible-playbook/clearing-hosts.yml -i kube-cluster/hosts'
 
               }
             }

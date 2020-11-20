@@ -23,7 +23,7 @@ pipeline {
             steps {
             echo "-==========-PING-HOSTS-==========-"
 
-                sh 'ansible-playbook kube-cluster/ansible_playbook/ping.yml -i kube-cluster/hosts'
+                sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
             }
         }
         
@@ -34,7 +34,7 @@ pipeline {
             steps {
             echo "-==========-Install Dependencies-==========-"
 
-                sh 'ansible-playbook kube-cluster/ansible_playbook/install_docker.yml -i kube-cluster/hosts'
+                sh 'ansible-playbook kube-cluster/ansible-playbook/install_docker.yml -i kube-cluster/hosts'
                 
                 echo "-==========Docker has been installed==========-"
 
@@ -47,7 +47,7 @@ pipeline {
             steps {
             echo "-==========-Install Dependencies-==========-"
 
-                sh 'ansible-playbook kube-cluster/ansible_playbook/preparation-steps.yml -i kube-cluster/hosts'
+                sh 'ansible-playbook kube-cluster/ansible-playbook/preparation-steps.yml -i kube-cluster/hosts'
 
             }
         }
@@ -58,7 +58,7 @@ pipeline {
             steps {
             echo "-==========-Install Master Node-==========- "
 
-                sh 'ansible-playbook kube-cluster/ansible_playbook/master.yml -i kube-cluster/hosts'
+                sh 'ansible-playbook kube-cluster/ansible-playbook/master.yml -i kube-cluster/hosts'
             }
          }
         stage('Join to Cluster K8S') {
@@ -68,7 +68,7 @@ pipeline {
             steps {
             echo "-==========-Join to Cluster K8S-=========-"
 
-                sh 'ansible-playbook kube-cluster/ansible_playbook/workers.yml -i kube-cluster/hosts'
+                sh 'ansible-playbook kube-cluster/ansible-playbook/workers.yml -i kube-cluster/hosts'
             }
         }
     }
