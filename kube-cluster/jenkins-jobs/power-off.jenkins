@@ -26,7 +26,7 @@ pipeline {
             }
             steps {
               echo " ========== Power Off k8s VMs ========= "
-              sh 'ansible-playbook kube-cluster/ansible_playbook/power-off.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible-playbook/power-off.yml -i kube-cluster/hosts'
             }
         }
     }

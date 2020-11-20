@@ -24,7 +24,7 @@ pipeline {
               }
             steps {
               echo " ==========UPDATING-CENTOS========= "
-              sh 'ansible-playbook kube-cluster/ansible_playbook/centos-updating.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible-playbook/centos-updating.yml -i kube-cluster/hosts'
             }
          }
    }

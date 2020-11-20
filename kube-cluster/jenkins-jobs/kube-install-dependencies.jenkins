@@ -22,7 +22,7 @@
              steps {
                echo " ==========Install Docker========= "
 
-               sh 'ansible-playbook kube-cluster/ansible_playbook/install_docker.yml -i kube-cluster/hosts'
+               sh 'ansible-playbook kube-cluster/ansible-playbook/install_docker.yml -i kube-cluster/hosts'
 
                }
              }
@@ -34,7 +34,7 @@
              steps {
                echo " ==========Install Dependencies========= "
 
-               sh 'ansible-playbook kube-cluster/ansible_playbook/preparation-steps.yml -i kube-cluster/hosts'
+               sh 'ansible-playbook kube-cluster/ansible-playbook/preparation-steps.yml -i kube-cluster/hosts'
 
                }
              }

@@ -18,7 +18,7 @@ pipeline {
               }
             steps {
               echo " ==========Install-java_8========= "
-              sh 'ansible-playbook kube-cluster/ansible_playbook/install-java.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible-playbook/install-java.yml -i kube-cluster/hosts'
             }
          }
    }

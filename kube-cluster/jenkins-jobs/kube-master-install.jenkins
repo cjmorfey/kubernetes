@@ -21,7 +21,7 @@ pipeline {
             steps {
               echo " ========== Install Master Node ========= "
 
-              sh 'ansible-playbook kube-cluster/ansible_playbook/master.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook kube-cluster/ansible-playbook/master.yml -i kube-cluster/hosts'
 
               }
             }
