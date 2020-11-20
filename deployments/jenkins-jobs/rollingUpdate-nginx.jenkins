@@ -15,13 +15,13 @@ pipeline {
     }
     stages {
         stage("Git pull") {
-            steps {              
+            steps {
                 echo " ==========Git PULL Updataes========= "
                 sh 'cd /root/workspace/deployments/roliingUpdate_nginx/kubernetes && git pull'
                 sh 'pwd'
-                sh 'ls -la'             
+                sh 'ls -la'
             }
-        } 
+        }
         stage("Rolling Update Nginx") {
             environment {
                 ANSIBLE_FORCE_COLOR = true
@@ -40,7 +40,7 @@ pipeline {
 
                 sh 'kubectl -n webserver rollout status deployment nginx-lb'
             }
-        }    
+        }
         stage("Create HPA Nginx"){
             steps {
                 sh 'kubectl -n webserver apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/hpa_nginx.yml'
