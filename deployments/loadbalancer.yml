@@ -9,4 +9,4 @@ spec:
       port: 80
       targetPort: 80
     selector:
-      app: backend
+      nginx-lb: nginx-lb
