@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-lb
+  labels:
+    application: fe-nginx
 spec:
   replicas: 2
   strategy:
@@ -14,8 +16,6 @@ spec:
       application: nginx-lb
   template:
     metadata:
-      labels:
-        application: nginx-lb
     spec:
       containers:
         - name: nginx-lb-pod
