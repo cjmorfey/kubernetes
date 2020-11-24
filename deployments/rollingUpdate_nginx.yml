@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-lb
+  labels:
+    application: fe-nginx
 spec:
   selector:
-    matchLabels:
-      app: nginx-lb
   replicas: 24
   strategy:
     type: RollingUpdate
@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        app: backend
+        application: fe-nginx
     spec:
       containers:
         - name: nginx-lb
