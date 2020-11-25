@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: nginx-lb
-          image: myregistry.net/nginx:latest
+          image: myregistry.net/nginx:1.16
           imagePullPolicy: Always
           ports:
             - containerPort: 80
