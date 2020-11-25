@@ -6,6 +6,8 @@ metadata:
     application: fe-nginx
 spec:
   selector:
+    matchLabels:
+      application: fe-nginx
   replicas: 24
   strategy:
     type: RollingUpdate
