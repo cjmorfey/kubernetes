@@ -13,7 +13,7 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      application: nginx-lb
+      application: fe-nginx
   template:
     metadata:
     spec:
