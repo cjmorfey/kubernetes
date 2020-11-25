@@ -34,16 +34,16 @@ pipeline {
             steps {
                 echo " ==========Rolling update========= "
 
-                sh 'kubectl -n webserver get -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yml --ignore-not-found'
+                sh 'kubectl -n webserver get -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --ignore-not-found'
                 sh 'kubectl -n webserver replace --save-config -f -'
-                sh 'kubectl apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yml --record=false'
+                sh 'kubectl apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --record=true'
 
                 sh 'kubectl -n webserver rollout status deployment nginx-lb'
             }
         }
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/hpa_nginx.yml'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/hpa_nginx.yaml'
             }
         }
 
