@@ -37,7 +37,7 @@ pipeline {
         }
         stage("Create Deployment Nginx") {
             steps {
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yml --validate=false'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yaml --validate=false'
             }
         }
         stage("Create HPA Nginx"){
