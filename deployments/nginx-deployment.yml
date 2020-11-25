@@ -16,6 +16,8 @@ spec:
       application: fe-nginx
   template:
     metadata:
+      labels:
+        application: fe-nginx
     spec:
       containers:
         - name: nginx-lb-pod
@@ -23,7 +25,7 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 80
-              protocol: HTTP
+              protocol: TCP
           resources:
           requests:
             cpu: 100m
