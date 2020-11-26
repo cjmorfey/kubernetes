@@ -24,7 +24,7 @@ pipeline {
             }
             steps {
                 echo " ==========Installing istio========= "
-                output=`bash -c "istioctl install --set profile=demo -y; exit 0"`
+                output='bash -c "istioctl install --set profile=demo -y; exit 0"'
             }
         }
         stage("Injekting istio to ns"){
