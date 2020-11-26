@@ -21,7 +21,7 @@ pipeline {
             }
             steps {
                 echo " ==========Installing istio========= "
-                sh 'istioctl install --set profile=demo -y'
+                sh 'istioctl install --set profile=default -y'
             }
         }
         stage("Create NS") {
