@@ -24,16 +24,16 @@ pipeline {
             }
             steps {
                 echo " ==========Installing istio========= "
-                output='bash -c "istioctl install --set profile=demo -y; exit 0"'
+                sh 'istioctl install --set profile=demo -y'
             }
         }
         stage("Injekting istio to ns"){
-            echo " ==========Create NS========= "
             steps {
+                echo " ==========Create NS========= "
                 sh 'kubectl create namespace webserver'
             }
-            echo " ==========Ingekting NS========= "
             steps {
+                echo " ==========Ingekting NS========= "
                 sh 'kubectl label namespace webserver istio-injection=enabled'
             }
         }
