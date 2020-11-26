@@ -1,5 +1,4 @@
 #!groovy
-// Install master
 properties([disableConcurrentBuilds()])
 
 pipeline {
@@ -22,7 +21,7 @@ pipeline {
                 sh 'ls -la'
             }
         }
-        stage("Create NS") {
+        stage("User input") {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
@@ -31,11 +30,6 @@ pipeline {
                 ok "Yes"
                 parameters { booleanParam(name: 'Are you sure?', defaultValue: false) }
             }
-            
-            steps {
-                sh 'kubectl create namespace webserver || true'
-            }
-            
         }
         
         stage("Create Deployment Nginx") {
