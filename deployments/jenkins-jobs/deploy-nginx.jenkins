@@ -33,9 +33,9 @@ pipeline {
             }
             
             steps {
-                sh 'kubectl create namespace webserver'
+                sh 'kubectl create namespace webserver' || true
             }
-            command || true
+            
         }
         
         stage("Create Deployment Nginx") {
