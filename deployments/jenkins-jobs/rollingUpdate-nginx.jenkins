@@ -36,7 +36,7 @@ pipeline {
 
                 sh 'kubectl apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false'
 
-                sh 'kubectl -n webserver rollout status deployment nginx-lb'
+                sh(returnStdout: true, 'kubectl -n webserver rollout status deployment nginx-lb')
             }
         }
         stage("Create HPA Nginx"){
