@@ -27,7 +27,7 @@ pipeline {
                 sh 'istioctl install --set profile=demo -y'
             }
         }
-        stage("Injekting istio to ns"){
+        stage("Injekting istio to ns") {
             steps {
                 echo " ==========Create NS========= "
                 sh 'kubectl create namespace webserver'
