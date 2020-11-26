@@ -33,9 +33,11 @@ pipeline {
             }
             
             steps {
-                sh 'kubectl create namespace webserver' command || true
+                sh 'kubectl create namespace webserver'
             }
         }
+        command || true
+        
         stage("Create Deployment Nginx") {
             steps {
                 sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yaml'
