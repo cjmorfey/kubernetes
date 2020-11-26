@@ -1,12 +1,9 @@
 #!groovy
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'slave'
     }
-
-
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
@@ -27,7 +24,7 @@ pipeline {
                 sh 'istioctl install --set profile=demo -y'
             }
         }
-        stage("Injekting istio to ns") {
+        stage("Injekting istio") {
             steps {
                 echo " ==========Create NS========= "
                 sh 'kubectl create namespace webserver'
