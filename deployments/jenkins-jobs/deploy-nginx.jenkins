@@ -21,7 +21,7 @@ pipeline {
                 sh 'ls -la'
             }
         }
-        stage("User input") {
+        stage("Create Deployment Nginx") {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
@@ -30,9 +30,6 @@ pipeline {
                 ok "Yes"
                 parameters { booleanParam(name: 'Are you sure?', defaultValue: false) }
             }
-        }
-        
-        stage("Create Deployment Nginx") {
             steps {
                 sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yaml'
             }
