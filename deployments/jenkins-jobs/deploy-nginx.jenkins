@@ -31,8 +31,9 @@ pipeline {
                 ok "Yes"
                 parameters { booleanParam(name: 'Are you sure?', defaultValue: false) }
             }
+            
             steps {
-                sh 'kubectl create namespace webserver'
+                sh 'kubectl create namespace webserver' command || true
             }
         }
         stage("Create Deployment Nginx") {
