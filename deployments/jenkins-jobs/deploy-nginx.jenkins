@@ -33,7 +33,7 @@ pipeline {
             }
             
             steps {
-                sh 'kubectl create namespace webserver; command || true'
+                sh 'kubectl create namespace webserver || true'
             }
             
         }
