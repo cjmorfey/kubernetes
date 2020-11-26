@@ -1,0 +1,36 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'slave'
+    }
+
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("Install istio to k8s cluster") {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
+            input {
+                message "Istio system will be installed"
+                ok "Yes"
+                parameters { booleanParam(name: 'Are you sure?', defaultValue: false, description: '') }
+            }
+            steps {
+                echo " ==========Installing istio========= "
+
+                output=`bash -c "istioctl install --set profile=demo -y; exit 0"`
+                //sh 'kubectl apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false'
+
+                //sh(returnStdout: true,script:"#!/bin/sh +e\n timeout=10 --preserve-status kubectl -n webserver rollout status deployment nginx-lb")
+            }
+        }
+
+    }
+}
