@@ -34,9 +34,14 @@ pipeline {
             steps {
                 echo " ==========Rolling update========= "
 
-                sh 'kubectl apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false'
+                sh 'kubectl apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false; sleep 30'
 
-                sh(returnStdout: true,script:"kubectl -n webserver rollout status deployment nginx-lb")
+              //  sh(returnStdout: true,script:"kubectl -n webserver rollout status deployment nginx-lb")
+            }
+        }
+        stage ("rolling update status") {
+            steps {
+                sh 'kubectl -n webserver rollout status deployment nginx-lb'
             }
         }
         stage("Create HPA Nginx"){
