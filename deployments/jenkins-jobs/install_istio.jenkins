@@ -24,11 +24,13 @@ pipeline {
                 sh 'istioctl install --set profile=demo -y'
             }
         }
-        stage("Injekting istio") {
+        stage("Create NS") {
             steps {
                 echo " ==========Create NS========= "
                 sh 'kubectl create namespace webserver'
             }
+        }
+        stage("Injekting istio") {
             steps {
                 echo " ==========Ingekting NS========= "
                 sh 'kubectl label namespace webserver istio-injection=enabled'
