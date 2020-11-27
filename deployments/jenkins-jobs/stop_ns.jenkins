@@ -34,6 +34,11 @@ pipeline {
                 sh 'kubectl delete ns webserver'
             }
         }
-
+        stage("Delete istio"){
+            steps {
+                echo " ==========delete istio========= "
+                sh 'istioctl x uninstall --purge'
+            }
+        }
     }
 }
