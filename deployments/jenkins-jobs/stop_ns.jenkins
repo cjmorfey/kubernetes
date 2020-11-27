@@ -36,8 +36,14 @@ pipeline {
         }
         stage("Delete istio"){
             steps {
-                echo " ==========delete istio========= "
+                echo " ==========delete istio-system========= "
                 sh 'istioctl x uninstall --purge -y'
+            }
+        }
+        stage("Delete istio NS"){
+            steps {
+                echo " ==========delete istio namespase========= "
+                sh 'kubectl delete ns istio-system'
             }
         }
     }
