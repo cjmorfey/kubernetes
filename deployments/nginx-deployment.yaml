@@ -20,7 +20,7 @@ spec:
         application: fe-nginx
     spec:
       containers:
-        - name: nginx-lb-pod
+        - name: nginx-lb
           image: myregistry.net/nginx:latest
           imagePullPolicy: Always
           ports:
