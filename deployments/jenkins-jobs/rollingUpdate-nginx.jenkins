@@ -34,7 +34,7 @@ pipeline {
             steps {
                 echo " ==========Rolling update========= "
 
-                sh 'kubectl -n webserver apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false; sleep 30'
+                sh 'kubectl -n webserver apply -f /root/workspace/deployments/roliingUpdate_nginx/kubernetes/deployments/rollingUpdate_nginx.yaml --record=false; sleep 3'
 
               //  sh(returnStdout: true,script:"kubectl -n webserver rollout status deployment nginx-lb")
             }
