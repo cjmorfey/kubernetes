@@ -1,0 +1,23 @@
+kind: VirtualService
+metadata:
+  name: sa-external-services
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - http-gateway
+  http:
+  - match:
+    - uri:
+        exact: /
+    - uri:
+        exact: /callback
+    - uri:
+        prefix: /static
+    - uri:
+        regex: '^.*.(ico|png|jpg)$'
+    route:
+    - destination:
+        host: fe-nginx
+        port:
+number: 80
