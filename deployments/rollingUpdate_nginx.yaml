@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-lb
+  labels:
+    application: fe-nginx
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      application: fe-nginx
+  template:
+    metadata:
+      labels:
+        application: fe-nginx
+    spec:
+      containers:
+        - name: nginx-lb
+          image: myregistry.net/nginx:1.16
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
