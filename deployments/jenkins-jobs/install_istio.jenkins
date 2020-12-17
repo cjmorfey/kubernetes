@@ -21,12 +21,7 @@ pipeline {
             }
             steps {
                 echo " ==========Installing istio========= "
-                sh 'istioctl install\
-                --set profile=default\
-                --set global.mtls.enabled=false\
-                --set tracing.enabled=true\
-                --set kiali.enabled=true \
-                --set grafana.enabled=true -y'
+                sh 'istioctl install --set profile=default --set global.mtls.enabled=false -y'
             }
         }
         stage("Create NS") {
