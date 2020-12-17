@@ -21,7 +21,7 @@ pipeline {
             }
             steps {
                 echo " ==========Installing istio========= "
-                sh 'istioctl install --set profile=default --set global.mtls.enabled=false -y'
+                sh 'istioctl install --set profile=default -y'
             }
         }
         stage("Create NS") {
