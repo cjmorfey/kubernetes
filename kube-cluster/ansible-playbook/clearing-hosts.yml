@@ -4,7 +4,7 @@
   
     - name: yum-cleanUp
       become_user: root
-      shell: yum-complete-transaction --cleanup-only
+      shell: yum-complete-transaction --cleanup-only -y
       
     - name: remove Docker
       yum:
