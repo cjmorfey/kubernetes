@@ -16,6 +16,9 @@ pipeline {
     
     stages {
         stage('shutdown K8S VMs') {
+            environment {
+                    ANSIBLE_FORCE_COLOR = true
+            }
             when {
                 beforeInput true
             }
