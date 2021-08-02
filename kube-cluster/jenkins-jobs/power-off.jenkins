@@ -21,6 +21,7 @@ pipeline {
             }
             when {
                 beforeInput = true
+                branch 'master'
             }
             input {
                 message "K8S cluster will be STOPPED!!!"
