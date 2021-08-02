@@ -20,8 +20,7 @@ pipeline {
             }
             input {
                 message "K8S cluster will STOPED!!!"
-                ok "Yes"
-                parameters { booleanParam(name: 'Are you sure?', defaultValue: false, description: '') }
+                id "simple-input"
             }
             steps {
                 echo " ==========Scaling========= "
