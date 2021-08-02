@@ -20,7 +20,7 @@ pipeline {
                     ANSIBLE_FORCE_COLOR = true
             }
             input {
-               message "Deploy to production?"
+               message "K8S cluster will be STOPPED!!!"
                id "simple-input"
             }
             steps {
