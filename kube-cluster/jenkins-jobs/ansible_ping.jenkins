@@ -33,7 +33,7 @@ pipeline {
             steps {
               echo " ==========PING-HOSTS========= "
 
-              sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts -l `workers`'
+              sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts -l-workers'
               }
               }
             }
