@@ -20,7 +20,7 @@ pipeline {
                     ANSIBLE_FORCE_COLOR = true
             }
             when {
-                beforeInput true
+                beforeInput = true
             }
             input {
                 message "K8S cluster will be STOPPED!!!"
