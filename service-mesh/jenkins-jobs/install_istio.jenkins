@@ -1,0 +1,39 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+pipeline {
+    agent {
+        label 'slave'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("Install istio to k8s cluster") {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
+            input {
+                message "Istio system will be installed"
+                id "simple-input"
+            }
+            steps {
+                echo " ==========Installing istio========= "
+                sh 'istioctl install --set profile=demo -y'
+            }
+        }
+        stage("Create NS") {
+            steps {
+                echo " ==========Create NS========= "
+                sh 'kubectl create namespace webserver'
+            }
+        }
+        stage("Injekting istio") {
+            steps {
+                echo " ==========Ingekting NS========= "
+                sh 'kubectl label namespace webserver istio-injection=enabled'
+            }
+        }
+    }
+}

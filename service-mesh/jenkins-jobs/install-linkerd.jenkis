@@ -1,0 +1,59 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+pipeline {
+    agent {
+        label 'slave'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("Install LinkerD to k8s cluster") {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
+            input {
+                message "LinkerD system will be installed"
+                id "simple-input"
+            }
+            steps {
+                echo " ==========kubectl version========= "
+                sh 'kubectl version --short'
+            }
+        }
+        stage("Step 1") {
+            steps {
+                echo " ==========Install the CLI========= "
+                sh 'curl -sL https://run.linkerd.io/install | sh; sleep 10'
+                sh 'export PATH=$PATH:/root/.linkerd2/bin'
+                sh 'linkerd version'
+            }
+        }
+        stage("Step 2") {
+            steps {
+                echo " ==========Validate k8s cluster========= "
+                sh 'linkerd check --pre'
+            }
+        }
+        stage("Step 3") {
+            steps {
+                echo " ==========Install the control plane onto k8s cluster========= "
+                sh 'linkerd install | kubectl apply -f -; sleep 120'
+                sh 'linkerd check'
+                echo " =========on - cluster metrics stack========== "
+                sh 'linkerd viz install | kubectl apply -f -'
+                echo " =========Jaeger collector and UI========== "
+                sh 'linkerd jaeger install | kubectl apply -f -'
+                echo " =========multi-cluster components========== "
+                sh 'linkerd multicluster install | kubectl apply -f -'
+                echo " ==========hosted metrics dashboard========= "
+                sh 'curl -sL buoyant.cloud/install | sh'
+                sh 'linkerd buoyant install | kubectl apply -f -'
+                echo " ==========checking========= "
+                sh 'linkerd check'
+            }
+        }
+    }
+}
