@@ -26,8 +26,8 @@ pipeline {
         stage("Step 1") {
             steps {
                 echo " ==========Install the CLI========= "
-                sh 'curl -sL https://run.linkerd.io/install | sh; sleep 10'
-                sh 'export PATH=$PATH:/root/.linkerd2/bin'
+                sh 'curl -sL https://run.linkerd.io/install | sh; sleep 30'
+                sh 'export PATH=$PATH:/root/.linkerd2/bin; sleep 20'
                 sh 'linkerd version'
             }
         }
