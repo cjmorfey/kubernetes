@@ -1,0 +1,44 @@
+#!groovy
+// Rolling update
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'slave'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("To remove Linkerd Viz") {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
+            input {
+                message "LinkerD will bee removed"
+                id "simple-input"
+            }
+            steps {
+                echo " ==========remove Linkerd Viz========= "
+                sh 'linkerd viz uninstall | kubectl delete -f -'
+            }
+        }
+        stage("To remove Linkerd Jaeger"){
+            steps {
+                sh 'linkerd jaeger uninstall | kubectl delete -f -'
+            }
+        }
+        stage("To remove Linkerd Multicluster"){
+            steps {
+                sh 'linkerd multicluster uninstall | kubectl delete -f -'
+            }
+        }
+        stage("Removing the control plane"){
+            steps {
+                sh 'linkerd uninstall | kubectl delete -f -'
+            }
+        }
+    }
+}

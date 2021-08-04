@@ -1,0 +1,49 @@
+#!groovy
+// Rolling update
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'slave'
+    }
+
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("scale ns => 0") {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
+            input {
+                message "K8S cluster will STOPED!!!"
+                id "simple-input"
+            }
+            steps {
+                echo " ==========Scaling========= "
+                sh 'kubectl scale deploy/nginx-lb -n webserver --replicas=0; sleep 30'
+            }
+        }
+        stage("Delete Namespase"){
+            steps {
+                echo " ==========drop NS========= "
+                sh 'kubectl delete ns webserver'
+            }
+        }
+        stage("Delete istio"){
+            steps {
+                echo " ==========delete istio-system========= "
+                sh 'istioctl x uninstall --purge -y'
+            }
+        }
+        stage("Delete istio NS"){
+            steps {
+                echo " ==========delete istio namespase========= "
+                sh 'kubectl delete ns istio-system'
+            }
+        }
+    }
+}
