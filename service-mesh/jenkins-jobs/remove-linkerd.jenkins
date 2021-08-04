@@ -48,7 +48,6 @@ pipeline {
         stage("Removing links"){
             steps {
                 sh 'unlink /usr/sbin/linkerd'
-                sh 'unlink /usr/sbin/linkerd-buoyant'
             }
         } 
     }
