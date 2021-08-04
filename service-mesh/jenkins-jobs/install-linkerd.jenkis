@@ -27,8 +27,6 @@ pipeline {
             steps {
                 echo " ==========Install the CLI========= "
                 sh 'curl -sL https://run.linkerd.io/install | sh; sleep 30'
-                sh 'echo "export PATH=$PATH:/root/.linkerd2/bin" >> .bash_profile; sleep 20'
-                sh 'source /root/.bash_profile'
                 sh 'ln -s /root/.linkerd2/bin/linkerd /usr/sbin/linkerd'
             }
         }
@@ -49,10 +47,6 @@ pipeline {
                 sh 'linkerd jaeger install | kubectl apply -f -'
                 echo " =========multi-cluster components========== "
                 sh 'linkerd multicluster install | kubectl apply -f -'
-                echo " ==========hosted metrics dashboard========= "
-                sh 'curl -sL buoyant.cloud/install | sh'
-                sh 'ln -s /root/.linkerd2/bin/linkerd-buoyant /usr/sbin/linkerd-buoyant'
-                sh 'linkerd-buoyant install | kubectl apply -f -'
                 echo " ==========checking========= "
                 sh 'linkerd check'
             }
