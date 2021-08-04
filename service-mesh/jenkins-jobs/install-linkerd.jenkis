@@ -51,8 +51,8 @@ pipeline {
                 sh 'linkerd multicluster install | kubectl apply -f -'
                 echo " ==========hosted metrics dashboard========= "
                 sh 'curl -sL buoyant.cloud/install | sh'
-                sh 'linkerd-buoyant install | kubectl apply -f -'
                 sh 'ln -s /root/.linkerd2/bin/linkerd-buoyant /usr/sbin/linkerd-buoyant'
+                sh 'linkerd-buoyant install | kubectl apply -f -'
                 echo " ==========checking========= "
                 sh 'linkerd check'
             }
