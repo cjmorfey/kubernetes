@@ -3,4 +3,4 @@ master ansible_host=master.kub ansible_user=root
 [workers]
 worker1 ansible_host=worker.kub ansible_user=root
 worker2 ansible_host=worker2.kub ansible_user=root
-lab_vm ansible_host=lab.vm ansible_user=root
+#lab_vm ansible_host=lab.vm ansible_user=root
