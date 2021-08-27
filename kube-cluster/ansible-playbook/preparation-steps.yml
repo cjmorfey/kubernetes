@@ -71,13 +71,11 @@
         allow_downgrade: yes
         
      - name: config Docker
-       shell: echo " > /etc/docker/daemon.json << EOF
-  979  {
-  980    "exec-opts": ["native.cgroupdriver=systemd"],
-  981    "log-driver": "json-file",
-  982    "log-opts": {
-  983      "max-size": "100m"
-  984    },
-  985    "storage-driver": "overlay2"
-  986  }
-  987  EOF" >> /root/.bash_profile
+       become: yes
+       shell: rsync -acP /opt/kuber-volume/daemon.json /etc/docker/
+       
+     - name: restart Docker
+       service:
+         name: docker
+         enabled: yes
+         state: restarted
