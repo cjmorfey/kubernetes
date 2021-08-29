@@ -15,8 +15,8 @@
 - hosts: workers
   become: yes
   tasks:
-    - name: reset Cluster after ADD
-      shell: kubeadm reset -f
+    #- name: reset Cluster after ADD
+    #  shell: kubeadm reset -f
 
     - name: join to cluster
       shell: sh /opt/kuber-volume/join_command.sh
