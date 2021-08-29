@@ -70,12 +70,12 @@
         state: present
         allow_downgrade: yes
         
-     - name: config Docker
-       become: yes
-       shell: rsync -acP /opt/kuber-volume/daemon.json /etc/docker/
+    - name: config Docker
+      become: yes
+      shell: rsync -acP /opt/kuber-volume/daemon.json /etc/docker/
        
-     - name: restart Docker
-       service:
-         name: docker
-         enabled: yes
-         state: restarted
+    - name: restart Docker
+      service:
+        name: docker
+        enabled: yes
+        state: restarted
