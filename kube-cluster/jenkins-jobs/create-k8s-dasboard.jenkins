@@ -20,5 +20,6 @@ pipeline {
               steps{
                 sh 'kubectl apply -f /opt/kuber-volume/k8s_deploy/kube-dashboard-admin.yaml'
               }
+         }
     }
-    }
+}    
