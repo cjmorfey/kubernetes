@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Create NS k8s-dashboard') {
             steps {
-              sh 'kubectl apply -f /opt/kuber-volume/k8s_deploy/kube-dashboard.yaml'
+              sh 'kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.3.1/aio/deploy/recommended.yaml'
               sleep 60
               }
             }
