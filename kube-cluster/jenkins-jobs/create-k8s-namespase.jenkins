@@ -3,7 +3,7 @@ properties([disableConcurrentBuilds()])
 
 pipeline {
     agent {
-        label 'master'
+        label 'slave'
     }
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
@@ -16,7 +16,7 @@ pipeline {
             ANSIBLE_FORCE_COLOR = true
              }
             steps {
-              sh 'ansible-playbook /kubernetes/kube-cluster/ansible-playbook/k8s-namespase.yml -i kube-cluster/hosts'
+              sh 'kubectl create namespace kubernetes-dashboard'
               }
             }
          }
