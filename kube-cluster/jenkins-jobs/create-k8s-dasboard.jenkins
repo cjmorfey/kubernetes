@@ -1,0 +1,23 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'slave'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage('Create K8S-dashboard') {
+            environment {
+            ANSIBLE_FORCE_COLOR = true
+             }
+            steps {
+              sh 'ansible-playbook kube-cluster/ansible-playbook/k8s-dashboard.yml -i kube-cluster/hosts'
+              }
+            }
+         }
+    }
