@@ -16,7 +16,7 @@ pipeline {
             ANSIBLE_FORCE_COLOR = true
              }
             steps {
-              sh 'ansible-playbook kube-cluster/ansible-playbook/k8s-namespase.yml -i kube-cluster/hosts'
+              sh 'ansible-playbook /kube-cluster/ansible-playbook/k8s-namespase.yml -i kube-cluster/hosts'
               }
             }
          }
