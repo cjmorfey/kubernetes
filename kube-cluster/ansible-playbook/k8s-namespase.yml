@@ -3,7 +3,7 @@
   tasks:
     - name: Create a k8s namespace
       community.kubernetes.k8s:
-        name: web-service
+        name: kubernetes-dashboard
         api_version: v1
         kind: Namespace
         state: present
