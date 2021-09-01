@@ -18,7 +18,8 @@ pipeline {
             }
         stage('Add access to dashboard') {
               steps{
-                sh 'kubectl apply -f /opt/kuber-volume/k8s_deploy/kube-dashboard-admin.yaml'
+                sh 'kubectl apply -f /opt/kuber-volume/k8s_deploy/kube-dashboard-admin.yaml'; sleep 60
+                sh '/opt/kuber-volume/k8s_deploy/run-k8s-proxy.sh'
               }
          }
     }
