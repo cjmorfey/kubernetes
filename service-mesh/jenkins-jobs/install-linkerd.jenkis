@@ -49,6 +49,8 @@ pipeline {
                 sh 'linkerd multicluster install | kubectl apply -f -'
                 echo " ==========checking========= "
                 sh 'linkerd check'
+                echo " ==========run-proxy========= "
+                sh '/opt/kuber-volume/k8s_deploy/run-linkerd-proxy.sh'
             }
         }
     }
