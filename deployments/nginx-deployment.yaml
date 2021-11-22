@@ -21,7 +21,8 @@ spec:
     spec:
       containers:
         - name: nginx-lb
-          image: myregistry.net/nginx:lates
+          #image: myregistry.net/nginx:lates
+          image: nginx:lates
           imagePullPolicy: Always
           ports:
             - containerPort: 80
