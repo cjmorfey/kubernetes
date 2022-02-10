@@ -16,8 +16,8 @@ pipeline {
     stages {
         stage("Git pull") {
             steps {
-                echo " ==========Git PULL Updataes========= "
-                sh 'cd /root/workspace/deployments/roliingUpdate_nginx/kubernetes && git pull'
+                echo " ==========Git PULL Updates========= "
+                sh 'cd /root/workspace/deployments/rollingUpdate_nginx/kubernetes && git pull'
                 sh 'pwd'
                 sh 'ls -la'
             }
@@ -28,8 +28,7 @@ pipeline {
             }
             input {
                 message "K8S cluster will be UPDATING!!!"
-                ok "Yes"
-                parameters { booleanParam(name: 'Are you sure?', defaultValue: false, description: '') }
+                id "simple-input"
             }
             steps {
                 echo " ==========Rolling update========= "
