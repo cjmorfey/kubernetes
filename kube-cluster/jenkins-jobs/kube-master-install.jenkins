@@ -1,13 +1,10 @@
 #!groovy
 // Install master
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
     }
-
-
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
@@ -16,14 +13,12 @@ pipeline {
     stages {
         stage('Install master K8S') {
             environment {
-                    ANSIBLE_FORCE_COLOR = true
-                  }
-            steps {
-              echo " ========== Install Master Node ========= "
-
-              sh 'ansible-playbook kube-cluster/ansible-playbook/master.yml -i kube-cluster/hosts'
-
-              }
+                ANSIBLE_FORCE_COLOR = true
             }
+            steps {
+                echo " ========== Install Master Node ========= "
+                sh 'ansible-playbook kube-cluster/ansible-playbook/master.yml -i kube-cluster/hosts'
+            }
+        }
     }
 }

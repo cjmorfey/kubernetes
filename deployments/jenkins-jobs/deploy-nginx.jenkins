@@ -15,7 +15,7 @@ pipeline {
     stages {
          stage("Git pull") {
             steps {
-                echo " ==========Git PULL Updataes========= "
+                echo " ==========Git PULL========= "
                 sh 'cd /root/workspace/deployments/deploy-nginx/kubernetes && git pull'
                 sh 'pwd'
                 sh 'ls -la'
@@ -25,11 +25,10 @@ pipeline {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
-            input {
-                message "K8S cluster starting!!!"
-                ok "Yes"
-                parameters { booleanParam(name: 'Are you sure?', defaultValue: false) }
-            }
+        input {
+            message "Nginx will be installed"
+            id "simple-input"
+        }
             steps {
                 sh 'kubectl -n webserver apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/nginx-deployment.yaml'
             }

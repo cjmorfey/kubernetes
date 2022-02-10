@@ -1,6 +1,5 @@
 #!groovy
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'slave'
@@ -13,11 +12,11 @@ pipeline {
     stages {
         stage('Create NS k8s-dashboard') {
             environment {
-            ANSIBLE_FORCE_COLOR = true
-             }
-            steps {
-              sh 'kubectl create namespace kubernetes-dashboard'
-              }
+                ANSIBLE_FORCE_COLOR = true
             }
-         }
+            steps {
+                sh 'kubectl create namespace kubernetes-dashboard'
+            }
+        }
     }
+}

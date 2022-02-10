@@ -1,43 +1,33 @@
 #!groovy
 // install K8S Cluster
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
     }
-
-
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
         ansiColor("xterm")
     }
     stages {
-
         stage('Ping cluster') {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
-
             steps {
-            echo "-==========-PING-HOSTS-==========-"
-
+                echo "-==========-PING-HOSTS-==========-"
                 sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
             }
         }
-        
         stage('Docker') {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
             steps {
-            echo "-==========-Install Dependencies-==========-"
-
+                echo "-==========-Install Dependencies-==========-"
                 sh 'ansible-playbook kube-cluster/ansible-playbook/install_docker.yml -i kube-cluster/hosts'
-                
                 echo "-==========Docker has been installed==========-"
-
             }
         }
         stage('Preparations') {
@@ -45,10 +35,8 @@ pipeline {
                 ANSIBLE_FORCE_COLOR = true
             }
             steps {
-            echo "-==========-Install Dependencies-==========-"
-
+                echo "-==========-Install Dependencies-==========-"
                 sh 'ansible-playbook kube-cluster/ansible-playbook/preparation-steps.yml -i kube-cluster/hosts'
-
             }
         }
         stage('Install master K8S') {
@@ -56,18 +44,16 @@ pipeline {
                 ANSIBLE_FORCE_COLOR = true
             }
             steps {
-            echo "-==========-Install Master Node-==========- "
-
+                echo "-==========-Install Master Node-==========-"
                 sh 'ansible-playbook kube-cluster/ansible-playbook/master.yml -i kube-cluster/hosts'
             }
          }
         stage('Join to Cluster K8S') {
             environment {
                 ANSIBLE_FORCE_COLOR = true
-             }
+            }
             steps {
-            echo "-==========-Join to Cluster K8S-=========-"
-
+                echo "-==========-Join to Cluster K8S-=========-"
                 sh 'ansible-playbook kube-cluster/ansible-playbook/workers.yml -i kube-cluster/hosts'
             }
         }

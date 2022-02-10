@@ -1,13 +1,10 @@
 #!groovy
 // join to cluster
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
     }
-
-
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
@@ -15,14 +12,13 @@ pipeline {
     }
     stages {
         stage('Join to cluster K8S') {
-        environment {
+            environment {
                 ANSIBLE_FORCE_COLOR = true
-              }
+            }
             steps {
-              echo " ==========Join to cluster k8S ========= "
-
-              sh 'ansible-playbook kube-cluster/ansible-playbook/workers.yml -i kube-cluster/hosts'
-              }
+                echo " ==========Join to cluster k8S ========= "
+                sh 'ansible-playbook kube-cluster/ansible-playbook/workers.yml -i kube-cluster/hosts'
+            }
         }
     }
 }

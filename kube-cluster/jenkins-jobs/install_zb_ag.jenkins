@@ -1,39 +1,24 @@
 #!groovy
 //Install zabbix-agent
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
     }
-
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
         ansiColor("xterm")
     }
     stages {
-        stage("First step") {
-            steps {
-                sh 'hostname'
-            }
-        }
-        stage("Second step") {
-            steps {
-                sh 'uptime'
-            }
-        }
-        
-        
         stage('Install zabbix-agent') {
             environment {
-                    ANSIBLE_FORCE_COLOR = true
-                  }
-            steps {
-              echo " ==========PING-HOSTS========= "
-
-              sh 'ansible-playbook kube-cluster/ansible-playbook/install_zb_ag.yml -i kube-cluster/hosts'
-              }
-              }
+                ANSIBLE_FORCE_COLOR = true
             }
+            steps {
+                echo "-===Zabbix-agent will be installed===-"
+                sh 'ansible-playbook kube-cluster/ansible-playbook/install_zb_ag.yml -i kube-cluster/hosts'
+            }
+        }
     }
+}

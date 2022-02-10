@@ -1,33 +1,28 @@
 #!groovy
 // Stop VMs
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
     }
-
-
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
         ansiColor("xterm")
     }
-    
     stages {
         stage('shutdown K8S VMs') {
             environment {
-                    ANSIBLE_FORCE_COLOR = true
+                ANSIBLE_FORCE_COLOR = true
             }
             input {
-               message "K8S cluster will be STOPPED!!!"
-               id "simple-input"
+                message "K8S cluster will be STOPPED!!!"
+                id "simple-input"
             }
             steps {
-              echo " ========== Power Off k8s VMs ========= "
-              sh 'ansible-playbook kube-cluster/ansible-playbook/power-off.yml -i kube-cluster/hosts'
+                echo " ========== Power Off k8s VMs ========= "
+                sh 'ansible-playbook kube-cluster/ansible-playbook/power-off.yml -i kube-cluster/hosts'
             }
         }
     }
-    
 }

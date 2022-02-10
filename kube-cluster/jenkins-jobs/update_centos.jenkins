@@ -1,7 +1,6 @@
 #!groovy
 // Update Centos
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
@@ -12,20 +11,19 @@ pipeline {
         ansiColor("xterm")
     }
   stages {
-
-        stage("Uptime Jenkins Machine") {
-            steps {
-                sh 'uptime'
-            }
-        }
-        stage('Update_Centos') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-              }
-            steps {
+      stage("Uptime Jenkins Machine") {
+          steps {
+              sh 'uptime'
+          }
+      }
+      stage('Update_Centos') {
+          environment {
+              ANSIBLE_FORCE_COLOR = true
+          }
+          steps {
               echo " ==========UPDATING-CENTOS========= "
               sh 'ansible-playbook kube-cluster/ansible-playbook/centos-updating.yml -i kube-cluster/hosts'
-            }
-         }
-   }
+          }
+      }
+  }
 }

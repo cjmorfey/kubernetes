@@ -1,7 +1,6 @@
 #!groovy
 // Install java
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
@@ -11,15 +10,15 @@ pipeline {
         timestamps()
         ansiColor("xterm")
     }
-  stages {
+    stages {
         stage('Install Java 8') {
             environment {
                 ANSIBLE_FORCE_COLOR = true
-              }
-            steps {
-              echo " ==========Install-java_8========= "
-              sh 'ansible-playbook kube-cluster/ansible-playbook/install-java.yml -i kube-cluster/hosts'
             }
-         }
+            steps {
+                echo "-==========Install-java-8=========-"
+                sh 'ansible-playbook kube-cluster/ansible-playbook/install-java.yml -i kube-cluster/hosts'
+            }
+        }
    }
 }
