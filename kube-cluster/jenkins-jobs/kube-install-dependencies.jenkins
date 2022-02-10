@@ -1,42 +1,33 @@
 #!groovy
  // PreParations
  properties([disableConcurrentBuilds()])
-
  pipeline {
      agent {
          label 'controller'
      }
-
-
      options {
          buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
          timestamps()
          ansiColor("xterm")
      }
      stages {
-      
          stage('Docker') {
              environment {
-                     ANSIBLE_FORCE_COLOR = true
-                   }
-             steps {
-               echo " ==========Install Docker========= "
-
-               sh 'ansible-playbook kube-cluster/ansible-playbook/install_docker.yml -i kube-cluster/hosts'
-
-               }
+                 ANSIBLE_FORCE_COLOR = true
              }
-      
+             steps {
+                 echo " ==========Install Docker========= "
+                 sh 'ansible-playbook kube-cluster/ansible-playbook/install_docker.yml -i kube-cluster/hosts'
+             }
+         }
          stage('Preparations') {
              environment {
-                     ANSIBLE_FORCE_COLOR = true
-                   }
-             steps {
-               echo " ==========Install Dependencies========= "
-
-               sh 'ansible-playbook kube-cluster/ansible-playbook/preparation-steps.yml -i kube-cluster/hosts'
-
-               }
+                 ANSIBLE_FORCE_COLOR = true
              }
+             steps {
+                 echo " ==========Install Dependencies========= "
+                 sh 'ansible-playbook kube-cluster/ansible-playbook/preparation-steps.yml -i kube-cluster/hosts'
+             }
+         }
      }
  }

@@ -1,7 +1,6 @@
 #!groovy
 // Health main server
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'

@@ -1,6 +1,5 @@
 #!groovy
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'slave'
@@ -12,15 +11,15 @@ pipeline {
     stages {
         stage('Remove user') {
             steps {
-              sh 'kubectl -n kubernetes-dashboard delete serviceaccount admin-user'
-              sleep 10
-              sh 'kubectl -n kubernetes-dashboard delete clusterrolebinding admin-user'
-              }
+                sh 'kubectl -n kubernetes-dashboard delete serviceaccount admin-user'
+                sleep 10
+                sh 'kubectl -n kubernetes-dashboard delete clusterrolebinding admin-user'
             }
+        }
         stage('Delete NS dashboard') {
-              steps{
+            steps{
                 sh 'kubectl delete ns kubernetes-dashboard'
-              }
-         }
+            }
+        }
     }
 }

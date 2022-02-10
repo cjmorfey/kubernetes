@@ -1,12 +1,10 @@
 #!groovy
 // Ping hosts
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
     }
-
     triggers { pollSCM('10 * * * *') }
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
@@ -14,27 +12,24 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage("First step") {
+        stage("Hostname main server") {
             steps {
                 sh 'hostname'
             }
         }
-        stage("Second step") {
+        stage("Health main server") {
             steps {
                 sh 'uptime'
             }
         }
-        
-        
         stage('Ansible ping') {
             environment {
-                    ANSIBLE_FORCE_COLOR = true
-                  }
-            steps {
-              echo " ==========PING-HOSTS========= "
-
-              sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
-              }
-              }
+                ANSIBLE_FORCE_COLOR = true
             }
+            steps {
+                echo " ==========PING-HOSTS========= "
+                sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
+            }
+        }
     }
+}

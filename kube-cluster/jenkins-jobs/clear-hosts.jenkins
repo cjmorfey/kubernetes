@@ -1,13 +1,10 @@
 #!groovy
 // Clear host
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'controller'
     }
-
-
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
@@ -16,14 +13,12 @@ pipeline {
     stages {
         stage('Cleaning K8S hosts') {
             environment {
-                    ANSIBLE_FORCE_COLOR = true
-                  }
+                ANSIBLE_FORCE_COLOR = true
+            }
             steps {
               echo " ==========Clearing Hosts========= "
-
               sh 'ansible-playbook kube-cluster/ansible-playbook/clearing-hosts.yml -i kube-cluster/hosts'
-
-              }
             }
+        }
     }
 }

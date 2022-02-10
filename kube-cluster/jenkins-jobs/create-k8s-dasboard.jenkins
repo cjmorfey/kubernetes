@@ -1,6 +1,5 @@
 #!groovy
 properties([disableConcurrentBuilds()])
-
 pipeline {
     agent {
         label 'slave'
@@ -14,13 +13,13 @@ pipeline {
             steps {
               sh 'kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.3.1/aio/deploy/recommended.yaml'
               sleep 60
-              }
             }
+        }
         stage('Add access to dashboard') {
               steps{
-                sh 'kubectl apply -f /opt/kuber-volume/k8s_deploy/kube-dashboard-admin.yaml'; sleep 60
-                sh '/opt/kuber-volume/k8s_deploy/run-k8s-proxy.sh'
+                  sh 'kubectl apply -f /opt/kuber-volume/k8s_deploy/kube-dashboard-admin.yaml'; sleep 60
+                  sh '/opt/kuber-volume/k8s_deploy/run-k8s-proxy.sh'
               }
          }
     }
-}    
+}
