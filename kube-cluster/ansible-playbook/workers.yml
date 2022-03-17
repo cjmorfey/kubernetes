@@ -20,3 +20,10 @@
 
     - name: join to cluster
       shell: sh /opt/kuber-volume/join_command.sh
+      
+- hosts: master
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: install metrics
+      shell: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
