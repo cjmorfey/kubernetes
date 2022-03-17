@@ -1,0 +1,30 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+pipeline {
+    agent {
+        label 'slave'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage("scale ns => 0") {
+            input {
+                message "K8S bombardier cluster will be STOPED!!!"
+                id "simple-input"
+            }
+            steps {
+                echo " ==========DownScaling========= "
+                sh 'kubectl scale deploy/bombardier -n bombardier --replicas=0; sleep 30'
+            }
+        }
+        stage("Delete Namespase"){
+            steps {
+                echo " ==========drop NS========= "
+                sh 'kubectl delete ns bombardier'
+            }
+        }
+    }
+}
