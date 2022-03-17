@@ -1,0 +1,45 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+pipeline {
+    agent {
+        label 'slave'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+         stage("Git pull") {
+            steps {
+                echo " ==========Git PULL========= "
+                sh 'cd /root/workspace/deployments/deploy-nginx/kubernetes && git pull'
+                sh 'pwd'
+                sh 'ls -la'
+            }
+        }
+         stage("Create namespace") {
+            steps {
+                echo " ==========Create NS========= "
+                sh 'kubectl create namespace bombardier'
+                }
+         }
+        stage("Create Deployment bombardier") {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
+            input {
+                message "bombardier will be installed"
+                id "simple-input"
+            }
+            steps {
+                sh 'kubectl -n bombardier apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/bombardier/bombardier-deploy.yml'
+            }
+        }
+        stage("Create HPA Nginx"){
+            steps {
+                sh 'kubectl -n bombardier apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/bombardier-hpa.yml'
+            }
+        }
+    }
+}
