@@ -21,8 +21,11 @@ spec:
     spec:
       containers:
         - name: bombardier
-          image: alpine/bombardier:latest
+          image: bombardier:latest
           imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              protocol: TCP
           resources:
             requests:
               cpu: 100m
