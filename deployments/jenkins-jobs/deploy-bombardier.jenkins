@@ -38,7 +38,7 @@ pipeline {
         }
         stage("Create HPA Nginx"){
             steps {
-                sh 'kubectl -n bombardier apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/bombardier-hpa.yml'
+                sh 'kubectl -n bombardier apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/bombardier/bombardier-hpa.yml'
             }
         }
     }
