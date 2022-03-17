@@ -22,7 +22,7 @@ spec:
       containers:
         - name: bombardier
           image: alpine/bombardier
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: 100m
