@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: bombardier
-          image: alpine/bombardier
+          image: alpine/bombardier:latest
           imagePullPolicy: Always
           resources:
             requests:
