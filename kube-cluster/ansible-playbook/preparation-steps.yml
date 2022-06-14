@@ -74,6 +74,16 @@
 - hosts: master
   become: yes
   tasks:
+    - name: config containerD
+      become: yes
+      shell: rsync -acP /opt/kuber-volume/config.toml
+      
+    - name: restart containerD
+      service:
+        name: containerd
+        enabled: yes
+        state: restarted
+        
     - name: install kubectl
       yum:
         name: kubectl
