@@ -74,11 +74,11 @@
 - hosts: master
   become: yes
   tasks:
-    - name: config containerD
+    - name: defoult config for containerd
       become: yes
-      shell: rsync -acP /opt/kuber-volume/config.toml
+      shell: containerd config default
       
-    - name: restart containerD
+    - name: restart containerd
       service:
         name: containerd
         enabled: yes
