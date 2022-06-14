@@ -76,6 +76,10 @@
   tasks:
     - name: defoult config for containerd
       become: yes
+      shell: rm -rf /etc/containerd/config.toml
+      
+    - name: defoult config for containerd
+      become: yes
       shell: containerd config default
       
     - name: restart containerd
