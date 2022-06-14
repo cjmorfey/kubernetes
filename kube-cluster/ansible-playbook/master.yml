@@ -1,6 +1,12 @@
 - hosts: master
   become: yes
   tasks:
+    - name: check status kubeApi
+      service:
+        name: kubectl
+        enabled: yes
+        state: status
+
     - name: initialize the cluster
       shell: kubeadm init --apiserver-advertise-address=192.168.1.90 --pod-network-cidr=10.244.0.0/16 >> cluster_initialized.txt
       args:
