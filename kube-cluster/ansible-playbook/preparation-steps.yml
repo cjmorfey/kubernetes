@@ -64,16 +64,7 @@
     - name: config Docker
       become: yes
       shell: rsync -acP /opt/kuber-volume/daemon.json /etc/docker/
-
-    - name: restart Docker
-      service:
-        name: docker
-        enabled: yes
-        state: restarted
-
-- hosts: master
-  become: yes
-  tasks:
+        
     - name: defoult config for containerd
       become: yes
       shell: rm -rf /etc/containerd/config.toml
@@ -87,7 +78,16 @@
         name: containerd
         enabled: yes
         state: restarted
-        
+
+    - name: restart Docker
+      service:
+        name: docker
+        enabled: yes
+        state: restarted
+
+- hosts: master
+  become: yes
+  tasks:       
     - name: install kubectl
       yum:
         name: kubectl
