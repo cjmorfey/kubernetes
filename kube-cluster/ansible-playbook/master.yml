@@ -2,7 +2,7 @@
   become: yes
   tasks:
     - name: initialize the cluster
-      shell: kubeadm init --apiserver-advertise-address=192.168.1.90 --pod-network-cidr=10.244.0.0/16 >> cluster_initialized.txt
+      shell: kubeadm init --pod-network-cidr=192.168.0.0/16 >> cluster_initialized.txt
       args:
         chdir: $HOME
         creates: cluster_initialized.txt
@@ -29,7 +29,7 @@
 
     - name: install Pod network
       become: yes
-      shell: kubectl apply -f https://docs.projectcalico.org/v3.21/manifests/calico.yaml >> pod_network_setup.txt
+      shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/tigera-operator.yaml >> pod_network_setup.txt
       args:
         chdir: $HOME
         creates: pod_network_setup.txt
