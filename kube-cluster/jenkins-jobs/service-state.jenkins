@@ -11,10 +11,10 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage('Your service will be ${STATE}') {
+        stage('Your service will be "${STATE}"') {
             steps {
                 echo " ========== WORKING... ========= "
-                sh 'ansible-playbook kube-cluster/ansible-playbook/service-state.yml'
+                exec("ansible-playbook kube-cluster/ansible-playbook/service-state.yml -i \"${HOST},\" --extra-vars SERVICE_NAME=${SERVICE_NAME} --extra-vars STATE=${STATE}")
             }
         }
     }
