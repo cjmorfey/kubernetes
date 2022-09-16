@@ -1,12 +1,12 @@
 - hosts: localhost
   become: true
   tasks:
-  - name:  your "{{ SERVICE_NAME }}" will be "{{ STATE }}"
+  - name:  your ${SERVICE_NAME} will be ${STATE}
     service:
-      name: "{{ SERVICE_NAAME }}"
-      state: "{{ STATE }}"
+      name: ${SERVICE_NAAME}
+      state: ${STATE}
 
   - name: Service status
     service:
-      name: "{{ SERVICE_NAAME }}"
+      name: ${SERVICE_NAAME}
       state: status
