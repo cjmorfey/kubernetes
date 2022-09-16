@@ -12,6 +12,9 @@ pipeline {
     }
     stages {
         stage('Your service will be "${STATE}"') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
             steps {
                 echo " ========== WORKING... ========= "
                 exec("ansible-playbook kube-cluster/ansible-playbook/service-state.yml -i \"${HOST},\" --extra-vars SERVICE_NAME=${SERVICE_NAME} --extra-vars STATE=${STATE}")
