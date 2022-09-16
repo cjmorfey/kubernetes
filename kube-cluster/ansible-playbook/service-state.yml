@@ -5,7 +5,7 @@
     service:
       name: "{{ SERVICE_NAME }}"
       state: "{{ STATE }}"
-  register: service_output
+    register: service_output
 
   - name: Service status
     service:
