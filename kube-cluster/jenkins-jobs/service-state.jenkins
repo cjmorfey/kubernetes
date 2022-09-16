@@ -11,7 +11,7 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage('Your service will be' ${STATE}) {
+        stage('Your service will be "$STATE"') {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
@@ -20,7 +20,7 @@ pipeline {
                 sh('ansible-playbook kube-cluster/ansible-playbook/service-state.yml --extra-vars SERVICE_NAME=${SERVICE_NAME} --extra-vars STATE=${STATE}')
             }
         }
-        stage('Status your service after' ${STATE}) {
+        stage('Status your service after $STATE') {
             steps {
                 sh('systemctl status "${SERVICE_NAME}"')
             }
