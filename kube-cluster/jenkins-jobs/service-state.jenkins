@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Your service will be ${STATE}') {
             steps {
-                echo " ========== Power Off k8s VMs ========= "
+                echo " ========== WORKING... ========= "
                 sh 'ansible-playbook kube-cluster/ansible-playbook/service-state.yml'
             }
         }
