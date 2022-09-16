@@ -9,4 +9,4 @@
 
   - name: Service status
     service:
-      shell: systemctl status "{{ SERVICE_NAME }}"
+      shell: systemctl state "{{ SERVICE_NAME }}"
