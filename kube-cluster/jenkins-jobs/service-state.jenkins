@@ -11,7 +11,7 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        stage('Your service will be' "${STATE}") {
+        stage('Your service will be' ${STATE}) {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
