@@ -1,0 +1,21 @@
+#!groovy
+// service state
+properties([disableConcurrentBuilds()])
+pipeline {
+    agent {
+        label 'controller'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage('Your service will be ${STATE}') {
+            steps {
+                echo " ========== Power Off k8s VMs ========= "
+                sh 'ansible-playbook kube-cluster/ansible-playbook/service-state.yml'
+            }
+        }
+    }
+}
