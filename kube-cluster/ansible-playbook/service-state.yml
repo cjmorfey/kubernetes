@@ -6,7 +6,3 @@
       name: "{{ SERVICE_NAME }}"
       state: "{{ STATE }}"
     register: service_output
-
-  - name: Service status
-    service:
-      shell: systemctl state "{{ SERVICE_NAME }}"
