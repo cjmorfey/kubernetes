@@ -1,4 +1,4 @@
-- hosts: "{{ HOST }}"
+- hosts: localhost
   become: true
   tasks:
   - name:  your "{{ SERVICE_NAME }} will be {{ STATE }}"
