@@ -32,8 +32,7 @@ pipeline {
         }
         stage("read Yaml file") {
             steps {
-                script{ datas = readYaml (file: '/tmp/repos/kube-cluster/ansible-playbook/ping.yml') }
-                echo datas.ear_file.deploy.toString()
+                sh 'cat /tmp/repos/kube-cluster/ansible-playbook/master.yml | grep "hosts:" | cut -d " " -f3'
             }
         }   
         stage('Ansible ping') {
