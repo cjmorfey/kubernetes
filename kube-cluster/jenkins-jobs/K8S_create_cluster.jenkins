@@ -31,16 +31,22 @@ pipeline {
             }
         }
         stage('Preparations') {
-            echo "-==========-Install Dependencies-==========-"
-            build job: 'Install_dependencies_k8s', quietPeriod: 0
+            steps {
+                echo "-==========-Install Dependencies-==========-"
+                build job: 'Install_dependencies_k8s', quietPeriod: 0
+            }
         }
         stage('Install master K8S') {
-            echo "-==========-Install Master Node-==========-"
-            build job: 'Install_Master-node-k8s', quietPeriod: 0
+            steps {
+                echo "-==========-Install Master Node-==========-"
+                build job: 'Install_Master-node-k8s', quietPeriod: 0
+            }
          }
         stage('Join to Cluster K8S') {
-            echo "-==========-Join to Cluster K8S-=========-"
-            build job: 'Install_Worker_nodes-k8s', quietPeriod: 0
+            steps {
+                echo "-==========-Join to Cluster K8S-=========-"
+                build job: 'Install_Worker_nodes-k8s', quietPeriod: 0
+            }
         }
     }
 }
