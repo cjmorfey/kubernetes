@@ -1,4 +1,4 @@
-- hosts: master
+- hosts: localhost
   tasks:
   - name: Clone a github repository
     git:
