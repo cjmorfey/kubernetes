@@ -40,7 +40,7 @@ pipeline {
          }
         stage('Join to Cluster K8S') {
             echo "-==========-Join to Cluster K8S-=========-"
-            build job: 'Install_Worker_nodes-k8s'
+            build job: 'Install_Worker_nodes-k8s', quietPeriod: 0
         }
     }
 }
