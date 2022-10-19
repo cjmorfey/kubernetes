@@ -1,7 +1,6 @@
 #!groovy
 // Ping hosts
 properties([disableConcurrentBuilds()])
-export ANSIBLE_FORCE_COLOR=true
 pipeline {
     agent {
         label 'controller'
@@ -24,15 +23,23 @@ pipeline {
             }
         }
         stage("Git clone repo") {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
             steps {
                 sh 'ansible-playbook kube-cluster/ansible-playbook/git-clone.yml -i kube-cluster/hosts'
             }
         }
-        stage("check folder") {
+        stage("read Yaml file") {
             steps {
-                sh 'ls -la /tmp/git-clone'}
-        }
+                script{ datas = readYaml (file: '/tmp/repos/kubernetes/kube-cluster/ansible-playbook/ping.yml') }
+                echo datas.ear_file.deploy.toString()
+            }
+        }   
         stage('Ansible ping') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
             steps {
                 echo " ==========PING-HOSTS========= "
                 sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
