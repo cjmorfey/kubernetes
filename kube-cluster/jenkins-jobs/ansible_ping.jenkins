@@ -27,7 +27,7 @@ pipeline {
                 ANSIBLE_FORCE_COLOR = true
             }
             steps {
-                sh 'ansible-playbook kube-cluster/ansible-playbook/git-clone.yml -i kube-cluster/hosts'
+                sh 'ansible-playbook kube-cluster/ansible-playbook/git-clone.yml'
             }
         }
         stage("read Yaml file") {
