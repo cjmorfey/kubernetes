@@ -32,7 +32,7 @@ pipeline {
         }
         stage("read Yaml file") {
             steps {
-                script{ datas = readYaml (file: '/tmp/repos/kubernetes/kube-cluster/ansible-playbook/ping.yml') }
+                script{ datas = readYaml (file: '/tmp/repos/kube-cluster/ansible-playbook/ping.yml') }
                 echo datas.ear_file.deploy.toString()
             }
         }   
