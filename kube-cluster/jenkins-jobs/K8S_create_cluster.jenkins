@@ -31,31 +31,16 @@ pipeline {
             }
         }
         stage('Preparations') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
-            steps {
-                echo "-==========-Install Dependencies-==========-"
-                sh 'ansible-playbook kube-cluster/ansible-playbook/preparation-steps.yml -i kube-cluster/hosts'
-            }
+            echo "-==========-Install Dependencies-==========-"
+            build job: 'Install_dependencies_k8s', quietPeriod: 0
         }
         stage('Install master K8S') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
-            steps {
-                echo "-==========-Install Master Node-==========-"
-                sh 'ansible-playbook kube-cluster/ansible-playbook/master.yml -i kube-cluster/hosts'
-            }
+            echo "-==========-Install Master Node-==========-"
+            build job: 'Install_Master-node-k8s', quietPeriod: 0
          }
         stage('Join to Cluster K8S') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
-            steps {
-                echo "-==========-Join to Cluster K8S-=========-"
-                sh 'ansible-playbook kube-cluster/ansible-playbook/workers.yml -i kube-cluster/hosts'
-            }
+            echo "-==========-Join to Cluster K8S-=========-"
+            build job: 'Install_Worker_nodes-k8s'
         }
     }
 }
