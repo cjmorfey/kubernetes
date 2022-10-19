@@ -22,6 +22,15 @@ pipeline {
                 sh 'uptime'
             }
         }
+        stage("Git clone repo") {
+            steps {
+                sh 'ansible-playbook kube-cluster/ansible-playbook/git-clone.yml -i kube-cluster/hosts'
+            }
+        }
+        stage("check folder") {
+            steps {
+                sh 'ls -la /tmp/git-clone/'}
+        }
         stage('Ansible ping') {
             environment {
                 ANSIBLE_FORCE_COLOR = true
