@@ -12,6 +12,9 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
+        environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
         stage("Hostname main server") {
             steps {
                 sh 'hostname'
@@ -29,12 +32,9 @@ pipeline {
         }
         stage("check folder") {
             steps {
-                sh 'ls -la /tmp/git-clone/'}
+                sh 'ls -la /tmp/git-clone'}
         }
         stage('Ansible ping') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
             steps {
                 echo " ==========PING-HOSTS========= "
                 sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
