@@ -1,6 +1,7 @@
 #!groovy
 // Ping hosts
 properties([disableConcurrentBuilds()])
+export ANSIBLE_FORCE_COLOR=true
 pipeline {
     agent {
         label 'controller'
@@ -12,9 +13,6 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
         stage("Hostname main server") {
             steps {
                 sh 'hostname'
