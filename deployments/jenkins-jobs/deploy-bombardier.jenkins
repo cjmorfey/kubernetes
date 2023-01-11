@@ -1,45 +1,42 @@
 #!groovy
 properties([disableConcurrentBuilds()])
+
 pipeline {
     agent {
         label 'slave'
     }
+
+
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
         ansiColor("xterm")
+        cleanWs()
     }
     stages {
          stage("Git pull") {
             steps {
                 echo " ==========Git PULL========= "
-                sh 'cd /root/workspace/deployments/deploy-nginx/kubernetes && git pull'
-                sh 'pwd'
-                sh 'ls -la'
+                sh 'git clone https://github.com/cjmorfey/kubernetes.git && cd ${WORKSPACE}/kubernetes'
             }
         }
-         stage("Create namespace") {
-            steps {
-                echo " ==========Create NS========= "
-                sh 'kubectl create namespace bombardier'
-                }
-         }
-        stage("Create Deployment bombardier") {
+        stage("Create Deployment BBD") {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
-            input {
-                message "bombardier will be installed"
-                id "simple-input"
-            }
+        input {
+            message "BBD will be installed"
+            id "simple-input"
+        }
             steps {
-                sh 'kubectl -n bombardier apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/bombardier/bombardier-deploy.yml'
+                sh 'kubectl -n bombardir apply -f ${WORKSPACE}/kubernetes/deployments/bombardir-deployment.yaml'
             }
         }
-        stage("Create HPA"){
+        stage("Create HPA BBD"){
             steps {
-                sh 'kubectl -n bombardier apply -f /root/workspace/deployments/deploy-nginx/kubernetes/deployments/bombardier/bombardier-hpa.yml'
+                sh 'kubectl -n bombardir apply -f ${WORKSPACE}/kubernetes/deployments/hpa_bombardir.yaml'
             }
         }
+
     }
 }
