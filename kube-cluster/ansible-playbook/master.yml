@@ -38,10 +38,6 @@
       become: yes
       shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.5/manifests/custom-resources.yaml > custom-resources.yaml
 
-    - name: control-plane
-      become: yes
-      shell: kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-
-
 - hosts: workers
   become: yes
   tasks:
