@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bombardir
+  labels:
+    application: bombardir-app
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      application: bombardir-app
+  template:
+    metadata:
+      labels:
+        application: bombardir-app
+    spec:
+      containers:
+        - name: bombardir
+          image: ghcr.io/porthole-ascend-cinnamon/mhddos_proxy
+          imagePullPolicy: Always
+          lang: UA
+          net: host
+          user-id: 302017587
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2G
+            limits:
+              cpu: 2000m
+              memory: 4G
