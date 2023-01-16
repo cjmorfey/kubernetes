@@ -13,9 +13,9 @@ pipeline {
         ansiColor("xterm")
     }
     stages {
-        cleanWs()
          stage("Git pull") {
             steps {
+                cleanWs()
                 echo " ==========Git PULL========= "
                 sh 'git clone https://github.com/cjmorfey/kubernetes.git && cd ${WORKSPACE}/kubernetes'
             }
