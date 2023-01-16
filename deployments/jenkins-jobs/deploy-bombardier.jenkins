@@ -11,9 +11,9 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
         ansiColor("xterm")
-        cleanWs()
     }
     stages {
+        cleanWs()
          stage("Git pull") {
             steps {
                 echo " ==========Git PULL========= "
