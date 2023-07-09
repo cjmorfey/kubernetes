@@ -26,7 +26,7 @@
     - name: net.ipv4.ip_forward is set to 1
       sysctl:
         name: net.ipv4.ip_forward
-        value: "1|string"
+        value: 1
         state: present
 
     - name: ensure net.bridge.bridge-nf-call-ip6tables is set to 1
