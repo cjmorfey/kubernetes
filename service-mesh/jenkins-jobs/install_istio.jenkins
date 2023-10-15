@@ -17,8 +17,6 @@ pipeline {
             }
             steps {
                 echo " ==========Installing istio========= "
-                sh 'curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.19.3 TARGET_ARCH=x86_64 sh -'
-                sh ''
                 sh 'istioctl install --set profile=demo -y'
             }
         }
@@ -32,6 +30,31 @@ pipeline {
             steps {
                 echo " ==========Ingekting NS========= "
                 sh 'kubectl label namespace webserver istio-injection=enabled'
+            }
+        }
+        stage("Git pull") {
+            steps {
+                echo " ==========Git PULL========= "
+                sh 'cd /root/workspace/service-mesh/istio/install_istio/kubernetes && git pull'
+                sh 'pwd'
+                sh 'ls -la'
+            }
+        }
+        stage("Deploy the sample application") {
+            steps {
+                echo " ==========Deploy the sample application========= "
+                sh 'kubectl apply -f /root/workspace/service-mesh/istio/install_istio/kubernetes/service-mesh/istio/bookinfo.yaml'
+            }
+        }
+        stage("Open the application to outside traffic") {
+            steps {
+                sh 'kubectl apply -f /root/workspace/service-mesh/istio/install_istio/kubernetes/service-mesh/istio/bookinfo-gateway.yaml'
+                sh 'istioctl analyze'
+            }
+        }
+        stage("Determining the ingress IP and ports") {
+            steps {
+                sh 'kubectl get svc istio-ingressgateway -n istio-system'
             }
         }
     }
