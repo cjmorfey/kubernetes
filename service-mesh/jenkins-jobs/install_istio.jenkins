@@ -11,15 +11,14 @@ pipeline {
     }
     stages {
         stage("Install istio to k8s cluster") {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
             input {
                 message "Istio system will be installed"
                 id "simple-input"
             }
             steps {
                 echo " ==========Installing istio========= "
+                sh 'curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.19.3 TARGET_ARCH=x86_64 sh -'
+                sh ''
                 sh 'istioctl install --set profile=demo -y'
             }
         }
