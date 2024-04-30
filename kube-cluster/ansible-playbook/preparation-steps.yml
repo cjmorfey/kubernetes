@@ -44,7 +44,7 @@
 
     - name: install kubelet & kubeadm
       become: yes
-      shell: yum install kubelet kubeadm --disableexcludes=kubernetes
+      shell: yum -y install kubelet kubeadm --disableexcludes=kubernetes
 
 
     - name: config Docker
@@ -71,4 +71,4 @@
   tasks:       
     - name: install kubectl
       become: yes
-      shell: yum install kubectl --disableexcludes=kubernetes
+      shell: yum -y install kubectl --disableexcludes=kubernetes
