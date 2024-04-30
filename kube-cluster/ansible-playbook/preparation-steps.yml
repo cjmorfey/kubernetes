@@ -42,14 +42,6 @@
         state: present
         reload: yes
 
-    - name: add Kubernetes' YUM repository
-      yum_repository:
-        name: Kubernetes
-        description: Kubernetes YUM repository
-        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
-        gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-        gpgcheck: yes
-
     - name: install kubelet
       yum:
         name: kubelet
