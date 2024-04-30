@@ -42,16 +42,10 @@
         state: present
         reload: yes
 
-    - name: install kubelet
-      yum:
-        name: kubelet
-        state: present
-        update_cache: true
+    - name: install kubelet & kubeadm
+      become: yes
+      shell: yum install kubelet kubeadm --disableexcludes=kubernetes
 
-    - name: install kubeadm
-      yum:
-        name: kubeadm
-        state: present
 
     - name: config Docker
       become: yes
@@ -76,7 +70,5 @@
   become: yes
   tasks:       
     - name: install kubectl
-      yum:
-        name: kubectl
-        state: present
-        allow_downgrade: yes
+      become: yes
+      shell: yum install kubectl --disableexcludes=kubernetes
