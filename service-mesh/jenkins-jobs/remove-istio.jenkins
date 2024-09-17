@@ -22,15 +22,11 @@ pipeline {
                 message "K8S cluster will STOPED!!!"
                 id "simple-input"
             }
-            steps {
-                echo " ==========Scaling========= "
-                sh 'kubectl scale deploy/nginx-lb -n webserver --replicas=0; sleep 30'
-            }
         }
         stage("Delete Namespase"){
             steps {
                 echo " ==========drop NS========= "
-                sh 'kubectl delete ns webserver'
+                sh 'kubectl delete --force ns webserver'
             }
         }
         stage("Delete istio"){
@@ -42,7 +38,7 @@ pipeline {
         stage("Delete istio NS"){
             steps {
                 echo " ==========delete istio namespase========= "
-                sh 'kubectl delete ns istio-system'
+                sh 'kubectl delete --force ns istio-system'
             }
         }
     }
