@@ -20,16 +20,6 @@ pipeline {
                 sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
             }
         }
-        stage('Docker') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
-            steps {
-                echo "-==========-Install Dependencies-==========-"
-                sh 'ansible-playbook kube-cluster/ansible-playbook/install_docker.yml -i kube-cluster/hosts'
-                echo "-==========Docker has been installed==========-"
-            }
-        }
         stage('Preparations') {
             steps {
                 echo "-==========-Install Dependencies-==========-"
