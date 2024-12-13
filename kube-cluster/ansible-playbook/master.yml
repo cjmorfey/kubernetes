@@ -1,43 +1,45 @@
 - hosts: master
   become: yes
   tasks:
-    - name: initialize the cluster
-      shell: kubeadm init --pod-network-cidr=10.244.0.0/16 > cluster_initialized.txt
+    - name: Initialize the cluster
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16
       args:
         chdir: $HOME
-        creates: cluster_initialized.txt
+      register: init_output
+      failed_when: "'error' in init_output.stderr or init_output.rc != 0"
 
-    - name: create .kube directory
-      become: yes
-      become_user: root
+    - name: Save initialization output to a file
+      copy:
+        content: "{{ init_output.stdout }}"
+        dest: /root/cluster_initialized.txt
+        mode: 0644  
+    
+    - name: Create .kube directory
       file:
         path: /root/.kube
         state: directory
         mode: 0755
 
-    - name: copy admin.conf to user's kube config
+    - name: Copy admin.conf to user's kube config
       copy:
         src: /etc/kubernetes/admin.conf
         dest: /root/.kube/config
         remote_src: yes
         owner: root
-        mode: 0777
+        mode: 0644
 
-    - name: Synchronization config to the remote hosts
-      become: yes
+    - name: Synchronize config to the remote hosts
       shell: rsync -acP /root/.kube/ /opt/kuber-volume/.kube/
 
-    - name: install Pod network
-      become: yes
-      shell: kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml >> pod_network_setup.txt
+    - name: Install Pod network with Flannel
+      shell: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
       args:
         chdir: $HOME
-        creates: pod_network_setup.txt
-
-- hosts: workers
-  become: yes
-  tasks:
-    - name: rsync conf
-      become: yes
-      shell: rsync -acP /opt/kuber-volume/.kube/ $HOME/.kube/
-
+      register: flannel_output
+      failed_when: "'error' in flannel_output.stderr or flannel_output.rc != 0"
+      
+    - name: Save Pod network setup log
+      copy:
+        content: "{{ flannel_output.stdout }}"
+        dest: /root/pod_network_setup.txt
+        mode: 0644
