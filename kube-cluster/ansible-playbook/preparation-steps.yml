@@ -24,21 +24,34 @@
     - name: Reload sysctl
       shell: sysctl -p
 
-    - name: Install kubeadm, kubelet, kubectl
-      shell: |
-        cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-        [kubernetes]
-        name=Kubernetes
-        baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
-        enabled=1
-        gpgcheck=1
-        repo_gpgcheck=1
-        gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-        exclude=kubelet kubeadm kubectl
-        EOF
-        yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
-      args:
-        executable: /bin/bash
+    - name: Add Kubernetes repository
+      yum_repository:
+        name: kubernetes
+        description: Kubernetes Repository
+        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+        gpgcheck: yes
+        gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+                https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        enabled: yes
+        repo_gpgcheck: yes
+        state: present
+        
+    - name: Remove old Kubernetes packages
+      yum:
+        name:
+          - kubelet
+          - kubectl
+          - kubeadm
+        state: absent
+
+    - name: Update Kubernetes packages
+      yum:
+        name:
+          - kubelet
+          - kubectl
+          - kubeadm
+        state: latest
+        update_cache: true
 
     - name: Enable and start kubelet
       service:
@@ -46,15 +59,8 @@
         state: started
         enabled: yes
 
-- hosts: master
-  become: yes
-  tasks:
-    - name: Initialize Kubernetes Cluster
-      shell: kubeadm init --pod-network-cidr=10.244.0.0/16
-      register: kubeadm_init_output
-
-    - name: Save cluster initialization output
-      copy:
-        content: "{{ kubeadm_init_output.stdout }}"
-        dest: /opt/kuber-volume/cluster_initialized.txt
-        mode: '0644'
+    - name: Ensure containerd is running
+      service:
+        name: containerd
+        state: started
+        enabled: true
