@@ -1,117 +1,78 @@
 - hosts: all
   become: yes
   tasks:
-  
-    - name: yum-cleanUp
-      become_user: root
+    - name: Clean up incomplete yum transactions
       shell: yum-complete-transaction --cleanup-only -y
-      
-    - name: remove Docker
+      register: yum_cleanup_output
+      changed_when: "'Nothing to do' not in yum_cleanup_output.stdout"
+      ignore_errors: yes
+
+    - name: Debug yum cleanup output
+      debug:
+        var: yum_cleanup_output.stdout
+
+    - name: Remove Docker and Kubernetes-related packages
       yum:
-        name: "{{ packages }}"
-      vars:
-        packages:
-        - docker-ce
-        - docker-ce-cli
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - kubelet
+          - kubectl
         state: absent
         update_cache: true
-        
-    - name: remove docker-common
+
+    - name: Remove additional Docker packages
       yum:
         name: docker-common
         state: absent
         update_cache: true
-        
-    - name: remove containerd-io
-      yum:
-        name: containerd.io
-        state: absent
-        update_cache: true
 
-    - name: remove kubelet
-      yum:
+    - name: Stop and disable kubelet service
+      service:
         name: kubelet
-        state: absent
-        update_cache: true
+        state: stopped
+        enabled: no
 
-    - name: remove kubectl
-      yum:
-        name: kubectl
-        state: absent
-        update_cache: true
-
+    - name: Flush IPTables rules (Kubernetes-related)
+      shell: |
+        iptables -F
+        iptables -t nat -F
+        iptables -t mangle -F
+        iptables -X
+      ignore_errors: yes
 
     - name: Reboot the servers
       reboot:
         reboot_timeout: 60
 
-    - name: waiting servers
-      local_action: wait_for host="{{ansible_host}}" delay=60 state=started port=22 connect_timeout=60 timeout=180
-
-    - name: remove Folders docker
+    - name: Remove residual directories and files
       file:
-        path: /var/lib/docker
+        path: "{{ item }}"
         state: absent
-
-    - name: emove Folders dockershim
-      file:
-        path: /var/lib/dockershim
-        state: absent
-
-    - name: remove Folders etc/docker
-      file:
-        path: /etc/docker
-        state: absent
-
-    - name: remove Folders etc/kubernetes
-      file:
-        path: /etc/kubernetes
-        state: absent
-
-    - name: remove file cluster.txt
-      file:
-        path: /root/cluster_initialized.txt
-        state: absent
-
-    - name: remove file node_joined.txt
-      file:
-        path: /root/node_joined.txt
-        state: absent
-
-    - name: remove pod_network_setup.txt
-      file:
-        path: /root/pod_network_setup.txt
-        state: absent
-
-    - name: remove Folder .kube
-      file:
-        path: $HOME/.kube
-        state: absent
+      with_items:
+        - /var/lib/docker
+        - /var/lib/dockershim
+        - /etc/docker
+        - /etc/kubernetes
+        - /root/cluster_initialized.txt
+        - /root/node_joined.txt
+        - /root/pod_network_setup.txt
+        - "{{ ansible_env.HOME }}/.kube"
 
 - hosts: master
   become: yes
   tasks:
-    - name: remove folders kubelet
+    - name: Remove Kubernetes master-specific directories
       file:
-        path: /var/lib/kubelet
+        path: "{{ item }}"
         state: absent
+      with_items:
+        - /var/lib/kubelet
+        - /var/lib/etcd
+        - /var/lib/docker
+        - /var/lib/dockershim
 
-    - name: remove folder etcd
-      file:
-        path: /var/lib/etcd
-        state: absent
-
-    - name: remove Folders lib docker
-      file:
-        path: /var/lib/docker
-        state: absent
-
-    - name: remove Folders lib dockershim
-      file:
-        path: /var/lib/dockershim
-        state: absent
-
-
-
-
-
+    - name: Debug completion message
+      debug:
+        msg: "Cleanup completed for master nodes."
