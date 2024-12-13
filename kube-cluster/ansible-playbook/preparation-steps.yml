@@ -1,74 +1,100 @@
 - hosts: all
   become: yes
   tasks:
-    - name: install runc
+    - name: Install required packages
       yum:
-        name: runc
+        name:
+          - runc
+          - psmisc
+          - git
+          - yum-utils
         state: present
         update_cache: true
 
-    - name: install psmisc
-      yum:
-        name: psmisc
-        state: present
-        update_cache: true
+    - name: Install Docker
+      shell: |
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        yum install -y docker-ce docker-ce-cli containerd.io
+      args:
+        executable: /bin/bash
 
-    - name : install Git
-      yum:
-        name: git
-        state: present
-        update_cache: true
+    - name: Configure Docker cgroup driver to systemd
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "exec-opts": ["native.cgroupdriver=systemd"],
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "100m"
+            },
+            "storage-driver": "overlay2"
+          }
 
-    - name: restart Docker
-      become: yes
-      shell: systemctl restart docker && systemctl enable docker
+    - name: Restart Docker service
+      service:
+        name: docker
+        state: restarted
+        enabled: yes
 
-    - name: net.ipv4.ip_forward is set to 1
-      sysctl:
-        name: net.ipv4.ip_forward
-        value: 1
-        state: present
+    - name: Ensure containerd is configured
+      shell: |
+        rm -f /etc/containerd/config.toml
+        containerd config default > /etc/containerd/config.toml
+      args:
+        executable: /bin/bash
 
-    - name: ensure net.bridge.bridge-nf-call-ip6tables is set to 1
-      sysctl:
-        name: net.bridge.bridge-nf-call-ip6tables
-        value: 1
-        state: present
-
-    - name: ensure net.bridge.bridge-nf-call-iptables is set to 1
-      sysctl:
-        name: net.bridge.bridge-nf-call-iptables
-        value: 1
-        state: present
-        reload: yes
-
-    - name: install kubelet & kubeadm
-      become: yes
-      shell: yum -y install kubelet kubeadm --disableexcludes=kubernetes
-
-
-    - name: config Docker
-      become: yes
-      shell: rsync -acP /opt/kuber-volume/daemon.json /etc/docker/
-        
-    - name: defoult config for containerd
-      become: yes
-      shell: rm -rf /etc/containerd/config.toml
-      
-    - name: defoult config for containerd
-      become: yes
-      shell: containerd config default
-      
-    - name: restart containerd
+    - name: Restart containerd service
       service:
         name: containerd
-        enabled: yes
         state: restarted
+        enabled: yes
 
+    - name: Enable net.bridge.bridge-nf-call-* settings
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+      loop:
+        - { name: net.bridge.bridge-nf-call-ip6tables, value: 1 }
+        - { name: net.bridge.bridge-nf-call-iptables, value: 1 }
+        - { name: net.ipv4.ip_forward, value: 1 }
+      register: sysctl_output
+
+    - name: Reload sysctl
+      shell: sysctl -p
+
+    - name: Install kubeadm, kubelet, kubectl
+      shell: |
+        cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+        [kubernetes]
+        name=Kubernetes
+        baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+        enabled=1
+        gpgcheck=1
+        repo_gpgcheck=1
+        gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        exclude=kubelet kubeadm kubectl
+        EOF
+        yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+      args:
+        executable: /bin/bash
+
+    - name: Enable and start kubelet
+      service:
+        name: kubelet
+        state: started
+        enabled: yes
 
 - hosts: master
   become: yes
-  tasks:       
-    - name: install kubectl
-      become: yes
-      shell: yum -y install kubectl --disableexcludes=kubernetes
+  tasks:
+    - name: Initialize Kubernetes Cluster
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+      register: kubeadm_init_output
+
+    - name: Save cluster initialization output
+      copy:
+        content: "{{ kubeadm_init_output.stdout }}"
+        dest: /opt/kuber-volume/cluster_initialized.txt
+        mode: '0644'
