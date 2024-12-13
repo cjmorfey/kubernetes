@@ -2,15 +2,15 @@
   become: yes
   gather_facts: false
   tasks:
-    - name: get join command
-      shell: kubeadm token create --print-join-command > $HOME/join_command
+    - name: Get join command
+      command: kubeadm token create --print-join-command
+      register: join_command_output
 
-    - name: share join command
+    - name: Save join command to a file
       copy:
-        src: $HOME/join_command
+        content: "{{ join_command_output.stdout }}"
         dest: /opt/kuber-volume/join_command.sh
-        remote_src: yes
-        mode: 0777
+        mode: '0777'
 
 - hosts: workers
   become: yes
