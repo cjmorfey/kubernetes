@@ -58,6 +58,7 @@
         - /root/cluster_initialized.txt
         - /root/node_joined.txt
         - /root/pod_network_setup.txt
+        - /etc/yum.repos.d/kubernetes.repo
         - "{{ ansible_env.HOME }}/.kube"
 
 - hosts: master
