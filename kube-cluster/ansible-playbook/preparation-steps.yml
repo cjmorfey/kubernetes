@@ -11,32 +11,6 @@
         state: present
         update_cache: true
 
-    - name: Install Docker
-      shell: |
-        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-        yum install -y docker-ce docker-ce-cli containerd.io
-      args:
-        executable: /bin/bash
-
-    - name: Configure Docker cgroup driver to systemd
-      copy:
-        dest: /etc/docker/daemon.json
-        content: |
-          {
-            "exec-opts": ["native.cgroupdriver=systemd"],
-            "log-driver": "json-file",
-            "log-opts": {
-              "max-size": "100m"
-            },
-            "storage-driver": "overlay2"
-          }
-
-    - name: Restart Docker service
-      service:
-        name: docker
-        state: restarted
-        enabled: yes
-
     - name: Ensure containerd is configured
       shell: |
         rm -f /etc/containerd/config.toml
