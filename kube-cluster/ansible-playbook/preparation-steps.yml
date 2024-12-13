@@ -7,22 +7,8 @@
           - runc
           - psmisc
           - git
-          - yum-utils
         state: present
         update_cache: true
-
-    - name: Ensure containerd is configured
-      shell: |
-        rm -f /etc/containerd/config.toml
-        containerd config default > /etc/containerd/config.toml
-      args:
-        executable: /bin/bash
-
-    - name: Restart containerd service
-      service:
-        name: containerd
-        state: restarted
-        enabled: yes
 
     - name: Enable net.bridge.bridge-nf-call-* settings
       sysctl:
