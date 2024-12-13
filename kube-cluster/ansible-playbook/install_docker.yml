@@ -1,53 +1,45 @@
 - hosts: all
   become: yes
   tasks:
-    - name: Add Docker YUM repository
-      shell: |
-        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-      args:
-        executable: /bin/bash
-
-    - name: Upgrade all packages, excluding kernel
-      yum:
-        name: '*'
-        state: latest
-        exclude: kernel*
-
-    - name: Install Docker and dependencies
+    - name: Install containerd dependencies
       yum:
         name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+
+    - name: Add Docker repository
+      shell: |
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+    - name: Install containerd.io
+      yum:
+        name: containerd.io
         state: present
         update_cache: true
 
-    - name: Configure Docker Daemon
-      copy:
-        dest: /etc/docker/daemon.json
-        content: |
-          {
-            "exec-opts": ["native.cgroupdriver=systemd"],
-            "log-driver": "json-file",
-            "log-opts": {
-              "max-size": "10m",
-              "max-file": "3"
-            },
-            "storage-driver": "overlay2"
-          }
-        mode: 0644
+    - name: Create containerd configuration file
+      shell: |
+        containerd config default > /etc/containerd/config.toml
 
-    - name: Restart Docker
+    - name: Update containerd configuration (use systemd as cgroup driver)
+      lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        line: 'SystemdCgroup = true'
+
+    - name: Restart containerd
       service:
-        name: docker
+        name: containerd
         state: restarted
         enabled: yes
 
-    - name: Check Docker service status
-      shell: systemctl status docker
-      register: docker_status
-      failed_when: "'active (running)' not in docker_status.stdout"
+    - name: Debug containerd status
+      shell: systemctl status containerd
+      register: containerd_status
+      failed_when: "'active (running)' not in containerd_status.stdout"
 
-    - name: Debug Docker service output
+    - name: Display containerd status
       debug:
-        var: docker_status.stdout
+        var: containerd_status.stdout
