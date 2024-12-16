@@ -63,6 +63,11 @@
           ca_hash: "{{ join_command.split(' ')[6].split(':')[-1] }}"
       delegate_to: localhost
 
+    - name: Display master IP in console
+      debug:
+        msg: "The master IP is: {{ master_ip }}"
+      delegate_to: localhost 
+
 - hosts: workers
   become: yes
   tasks:
