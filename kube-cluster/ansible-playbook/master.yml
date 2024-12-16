@@ -2,7 +2,7 @@
   become: yes
   tasks:
     - name: Initialize the cluster
-      shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=SystemVerification
       args:
         chdir: $HOME
       register: init_output
