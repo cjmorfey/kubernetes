@@ -1,4 +1,4 @@
-[masters]
+[master]
 master-01 ansible_host=192.168.1.90 ansible_user=root
 #master-02 ansible_host=master-02.k8s ansible_user=root
 [workers]
