@@ -75,7 +75,7 @@
       shell: rsync -acP /opt/kuber-volume/.kube/ $HOME/.kube/
 
     - name: Join worker nodes to the cluster
-      shell: kubeadm join {{ hostvars[groups['masters'][0]]['worker_join_vars']['master_ip'] }}:6443 --token {{ hostvars[groups['master'][0]]['worker_join_vars']['token'] }} --discovery-token-ca-cert-hash sha256:{{ hostvars[groups['master'][0]]['worker_join_vars']['ca_hash'] }}
+      shell: kubeadm join {{ hostvars[groups['master'][0]]['worker_join_vars']['master_ip'] }}:6443 --token {{ hostvars[groups['master'][0]]['worker_join_vars']['token'] }} --discovery-token-ca-cert-hash sha256:{{ hostvars[groups['master'][0]]['worker_join_vars']['ca_hash'] }}
       register: join_output
       failed_when: "'error' in join_output.stderr or join_output.rc != 0"
 
