@@ -1,19 +1,33 @@
 - hosts: all
   become: yes
   tasks:
-    - name: upgrade all packages
+    - name: Upgrade all packages
       yum:
         name: '*'
         state: latest
 
-    - name: check for reboot hint
-      shell: if [ $(rpm -q --last kernel | awk 'NR==1 {print $1}') != kernel-$(uname -r) ]; then echo 'reboot'; else echo 'Kernel is current'; fi
-      ignore_errors: true
+    - name: Check if kernel update requires reboot
+      shell: |
+        latest_kernel=$(rpm -q --last kernel | awk 'NR==1 {print $1}')
+        current_kernel="kernel-$(uname -r)"
+        if [ "$latest_kernel" != "$current_kernel" ]; then
+          echo "reboot_needed"
+        else
+          echo "no_reboot"
+        fi
       register: reboot_hint
+      changed_when: false
 
-    - name: Reboot the servers
+    - name: Set reboot_needed fact
+      set_fact:
+        reboot_needed: "{{ 'reboot_needed' in reboot_hint.stdout }}"
+
+    - name: Reboot the servers if needed
       reboot:
         reboot_timeout: 60
+      when: reboot_needed
 
-    - name: waiting servers
-      local_action: wait_for host="{{ansible_host}}" delay=60 state=started port=22 connect_timeout=60 timeout=180
+    - name: Wait for servers to be reachable
+      wait_for_connection:
+        delay: 10
+        timeout: 180
