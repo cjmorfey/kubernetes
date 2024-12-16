@@ -1,0 +1,6 @@
+[master]
+master-01 ansible_host=master-01-u.k8s ansible_user=root
+[workers]
+worker-01 ansible_host=worker-01-u.k8s ansible_user=root
+worker-02 ansible_host=worker-02-u.k8s ansible_user=root
+worker-03 ansible_host=worker-03-u.k8s ansible_user=root
