@@ -13,7 +13,7 @@
         content: "{{ init_output.stdout }}"
         dest: /root/cluster_initialized.txt
         mode: 0644  
-    
+
     - name: Create .kube directory
       file:
         path: /root/.kube
@@ -37,13 +37,13 @@
         chdir: $HOME
       register: flannel_output
       failed_when: "'error' in flannel_output.stderr or flannel_output.rc != 0"
-      
+
     - name: Save Pod network setup log
       copy:
         content: "{{ flannel_output.stdout }}"
         dest: /root/pod_network_setup.txt
         mode: 0644
-        
+
     - name: Generate kubeadm join token
       shell: kubeadm token create --print-join-command
       register: join_command_output
@@ -54,13 +54,15 @@
         join_command: "{{ join_command_output.stdout }}"
         token: "{{ join_command.split(' ')[4] }}"
         ca_hash: "{{ join_command.split(' ')[6].split(':')[-1] }}"
+      
+    - name: Save join variables to hostvars
+      set_fact:
+        worker_join_vars:
+          master_ip: "{{ ansible_host }}"
+          token: "{{ join_command.split(' ')[4] }}"
+          ca_hash: "{{ join_command.split(' ')[6].split(':')[-1] }}"
       delegate_to: localhost
 
-    - name: Display master IP in console
-      debug:
-        msg: "The master IP is: {{ master_ip }}"
-      delegate_to: localhost 
-        
 - hosts: workers
   become: yes
   tasks:
@@ -68,7 +70,7 @@
       shell: rsync -acP /opt/kuber-volume/.kube/ $HOME/.kube/
 
     - name: Join worker nodes to the cluster
-      shell: kubeadm join {{ master_ip }}:6443 --token {{ token }} --discovery-token-ca-cert-hash sha256:{{ ca_hash }}
+      shell: kubeadm join {{ hostvars['master']['worker_join_vars']['master_ip'] }}:6443 --token {{ hostvars['master']['worker_join_vars']['token'] }} --discovery-token-ca-cert-hash sha256:{{ hostvars['master']['worker_join_vars']['ca_hash'] }}
       register: join_output
       failed_when: "'error' in join_output.stderr or join_output.rc != 0"
 
