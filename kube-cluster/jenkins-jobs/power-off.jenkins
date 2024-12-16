@@ -1,6 +1,16 @@
 #!groovy
 // Stop VMs
-properties([disableConcurrentBuilds()])
+properties([
+    disableConcurrentBuilds(),
+    parameters([
+        choice(
+            name: 'SERVER_GROUP',
+            choices: ['hosts-centos', 'hosts-ubuntu'],
+            description: 'Select the group of servers to target (CentOS or Ubuntu)'
+        )
+    ])
+])
+
 pipeline {
     agent {
         label 'controller'
@@ -20,8 +30,11 @@ pipeline {
                 id "simple-input"
             }
             steps {
-                echo " ========== Power Off k8s VMs ========= "
-                sh 'ansible-playbook kube-cluster/ansible-playbook/power-off.yml -i kube-cluster/hosts'
+                script {
+                    echo " ========== Power Off k8s VMs ========= "
+                    echo "Selected server group: ${params.SERVER_GROUP}"
+                    sh "ansible-playbook kube-cluster/ansible-playbook/power-off.yml -i kube-cluster/${params.SERVER_GROUP}"
+                }
             }
         }
     }
