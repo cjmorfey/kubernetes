@@ -50,9 +50,16 @@
 
     - name: Extract token and hash from join command
       set_fact:
-        master_ip: "{{ join_command_output.stdout.split(' ')[2].split(':')[0] }}"
-        token: "{{ join_command_output.stdout.split(' ')[4] }}"
-        ca_hash: "{{ join_command_output.stdout.split(' ')[6].split(':')[-1] }}"
+        master_ip: "{{ ansible_host }}"
+        join_command: "{{ join_command_output.stdout }}"
+        token: "{{ join_command.split(' ')[4] }}"
+        ca_hash: "{{ join_command.split(' ')[6].split(':')[-1] }}"
+      delegate_to: localhost
+
+    - name: Display master IP in console
+      debug:
+        msg: "The master IP is: {{ master_ip }}"
+      delegate_to: localhost 
         
 - hosts: workers
   become: yes
