@@ -44,6 +44,16 @@
         dest: /root/pod_network_setup.txt
         mode: 0644
         
+    - name: Generate kubeadm join token
+      shell: kubeadm token create --print-join-command
+      register: join_command_output
+
+    - name: Extract token and hash from join command
+      set_fact:
+        master_ip: "{{ join_command_output.stdout.split(' ')[2].split(':')[0] }}"
+        token: "{{ join_command_output.stdout.split(' ')[4] }}"
+        ca_hash: "{{ join_command_output.stdout.split(' ')[6].split(':')[-1] }}"
+        
 - hosts: workers
   become: yes
   tasks:
