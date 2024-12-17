@@ -33,11 +33,11 @@ pipeline {
         }
         stage('Ansible ping') {
             environment {
-                ANSIBLE_FORCE_COLOR = true
+                ANSIBLE_FORCE_COLOR = 'true'
             }
             steps {
-                echo " ==========PING-HOSTS========= "
-                sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/${params.SERVER_GROUP}'
+                echo " ========== PING-HOSTS ========= "
+                sh "ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/${params.SERVER_GROUP}"
             }
         }
     }
