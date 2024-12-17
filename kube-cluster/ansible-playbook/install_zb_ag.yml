@@ -3,8 +3,28 @@
   vars:
     zabbix_version: "5.0"
     zabbix_server_ip: "192.168.1.50"
-
   tasks:
+    - name: Ensure Python3 is installed
+      raw: |
+        if ! command -v python3 > /dev/null 2>&1; then
+          apt-get update && apt-get install -y python3;
+        fi
+
+    - name: Ensure Python3 pip is installed
+      raw: |
+        if ! command -v pip3 > /dev/null 2>&1; then
+          apt-get install -y python3-pip;
+        fi
+
+    - name: Install Ansible dependencies
+      raw: |
+        if ! command -v apt-get > /dev/null 2>&1; then
+          apt-get update && apt-get install -y apt-utils;
+        fi
+
+    - name: Gather facts
+      ansible.builtin.setup:
+    
     - name: Install prerequisites
       apt:
         name:
