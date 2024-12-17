@@ -1,16 +1,25 @@
 #!groovy
 // Ping hosts
-properties([disableConcurrentBuilds()])
+properties([
+    disableConcurrentBuilds(),
+    parameters([
+        choice(
+            name: 'SERVER_GROUP',
+            choices: ['hosts-centos', 'hosts-ubuntu'],
+            description: 'Select the group of servers to target (CentOS or Ubuntu)'
+        )
+    ])
+])
 pipeline {
     agent {
         label 'controller'
     }
-    triggers { pollSCM('10 * * * *') }
     options {
         buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
         timestamps()
         ansiColor("xterm")
     }
+
     stages {
         stage("Hostname main server") {
             steps {
@@ -22,26 +31,13 @@ pipeline {
                 sh 'uptime'
             }
         }
-        stage("Git clone repo") {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
-            steps {
-                sh 'ansible-playbook kube-cluster/ansible-playbook/git-clone.yml'
-            }
-        }
-        stage("read Yaml file") {
-            steps {
-                sh 'cat /tmp/repos/kube-cluster/ansible-playbook/master.yml | grep "hosts:" | cut -d " " -f3'
-            }
-        }   
         stage('Ansible ping') {
             environment {
                 ANSIBLE_FORCE_COLOR = true
             }
             steps {
                 echo " ==========PING-HOSTS========= "
-                sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
+                sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/${params.SERVER_GROUP}'
             }
         }
     }
