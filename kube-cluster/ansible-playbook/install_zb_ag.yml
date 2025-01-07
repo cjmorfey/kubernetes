@@ -26,11 +26,12 @@
 
     - name: Add Zabbix repository
       shell: |
-        wget https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_{{ zabbix_version }}-1%2B{{ ubuntu_codename.stdout }}_all.deb
-        dpkg -i zabbix-release_{{ zabbix_version }}-1+{{ ubuntu_codename.stdout }}_all.deb
-        apt-get update
-      args:
-        creates: /etc/apt/sources.list.d/zabbix.list
+        shell: |
+          wget https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-2+ubuntu24.04_all.deb -O /tmp/zabbix-release.deb
+          dpkg -i /tmp/zabbix-release.deb
+          apt-get update
+        args:
+          creates: /etc/apt/sources.list.d/zabbix.list
 
     - name: Install prerequisites
       raw: |
