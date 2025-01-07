@@ -1,3 +1,4 @@
+---
 - hosts: all
   become: yes
   vars:
@@ -19,17 +20,21 @@
           fail:
             msg: "Failed to install Python3 or its dependencies."
 
-    - name: Install prerequisites for Zabbix Agent
-      raw: |
-        apt-get update && apt-get install -y wget gnupg zabbix-agent
+    - name: Detect Ubuntu codename
+      command: lsb_release -sc
+      register: ubuntu_codename
 
     - name: Add Zabbix repository
       shell: |
-        wget https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_{{ zabbix_version }}-1%2Blunar_all.deb
-        dpkg -i zabbix-release_{{ zabbix_version }}-1+lunar_all.deb
+        wget https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_{{ zabbix_version }}-1%2B{{ ubuntu_codename.stdout }}_all.deb
+        dpkg -i zabbix-release_{{ zabbix_version }}-1+{{ ubuntu_codename.stdout }}_all.deb
         apt-get update
       args:
         creates: /etc/apt/sources.list.d/zabbix.list
+
+    - name: Install prerequisites
+      raw: |
+        apt-get update && apt-get install -y wget gnupg
 
     - name: Install Zabbix Agent
       apt:
