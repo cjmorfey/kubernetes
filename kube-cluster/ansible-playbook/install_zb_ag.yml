@@ -6,43 +6,21 @@
     zabbix_server_ip: "192.168.1.50"
 
   tasks:
-    - name: Ensure Python3 and dependencies are installed
-      block:
-        - name: Install Python 3 and pip
-          raw: |
-            apt-get update && apt-get install -y python3 python3-pip python3-apt
-
-        - name: Ensure Python 3 interpreter for Ansible
-          ansible.builtin.setup:
-
-      rescue:
-        - name: Fail task with error message
-          fail:
-            msg: "Failed to install Python3 or its dependencies."
-
-    - name: Detect Ubuntu codename
-      command: lsb_release -sc
-      register: ubuntu_codename
-
-    - name: Add Zabbix repository
-      shell: |
-        shell: |
-          wget https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-2+ubuntu24.04_all.deb -O /tmp/zabbix-release.deb
-          dpkg -i /tmp/zabbix-release.deb
-          apt-get update
-        args:
-          creates: /etc/apt/sources.list.d/zabbix.list
-
-    - name: Install prerequisites
+    - name: Ensure prerequisites are installed (wget and gnupg)
       raw: |
         apt-get update && apt-get install -y wget gnupg
 
-    - name: Install Zabbix Agent
+    - name: Add Zabbix repository
       raw: |
-        apt-get update && apt-get install -y zabbix-agent
+        wget https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_{{ zabbix_version }}+ubuntu24.04_all.deb -O /tmp/zabbix-release.deb && \
+        dpkg -i /tmp/zabbix-release.deb && \
+        apt-get update
 
+    - name: Install Zabbix agent
+      raw: |
+        apt-get install -y zabbix-agent
 
-    - name: Configure Zabbix Agent
+    - name: Configure Zabbix agent
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: "{{ item.regexp }}"
@@ -52,17 +30,16 @@
         - { regexp: "^ServerActive=", line: "ServerActive={{ zabbix_server_ip }}" }
         - { regexp: "^Hostname=", line: "Hostname={{ inventory_hostname }}" }
 
-    - name: Restart and enable Zabbix Agent service
-      systemd:
-        name: zabbix-agent
-        state: restarted
-        enabled: yes
+    - name: Restart and enable Zabbix agent service
+      raw: |
+        systemctl restart zabbix-agent && systemctl enable zabbix-agent
 
-    - name: Verify Zabbix Agent service status
-      shell: systemctl is-active zabbix-agent
+    - name: Verify Zabbix agent service status
+      raw: |
+        systemctl is-active zabbix-agent
       register: zabbix_status
       failed_when: "'active' not in zabbix_status.stdout"
 
-    - name: Debug Zabbix Agent status
+    - name: Debug Zabbix agent status
       debug:
         var: zabbix_status.stdout
