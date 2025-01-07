@@ -37,9 +37,9 @@
         apt-get update && apt-get install -y wget gnupg
 
     - name: Install Zabbix Agent
-      apt:
-        name: zabbix-agent
-        state: present
+      raw: |
+        apt-get update && apt-get install -y zabbix-agent
+
 
     - name: Configure Zabbix Agent
       lineinfile:
