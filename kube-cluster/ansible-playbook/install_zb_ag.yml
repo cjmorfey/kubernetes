@@ -20,12 +20,8 @@
             msg: "Failed to install Python3 or its dependencies."
 
     - name: Install prerequisites for Zabbix Agent
-      apt:
-        name:
-          - wget
-          - gnupg
-        state: present
-        update_cache: yes
+      raw: |
+        apt-get update && apt-get install -y wget gnupg zabbix-agent
 
     - name: Add Zabbix repository
       shell: |
