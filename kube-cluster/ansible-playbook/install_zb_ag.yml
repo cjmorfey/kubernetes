@@ -1,3 +1,4 @@
+---
 - hosts: all
   become: yes
   vars:
@@ -5,31 +6,21 @@
     zabbix_server_ip: "192.168.1.50"
 
   tasks:
-    - name: Install prerequisites
-      apt:
-        name:
-          - wget
-          - gnupg
-        state: present
-        update_cache: yes
+    - name: Ensure prerequisites are installed (wget and gnupg)
+      raw: |
+        apt-get update && apt-get install -y wget gnupg
 
     - name: Add Zabbix repository
-      shell: |
-        wget https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_{{ zabbix_version }}-1%2Blunar_all.deb
-        dpkg -i zabbix-release_{{ zabbix_version }}-1+lunar_all.deb
-      args:
-        creates: /etc/apt/sources.list.d/zabbix.list
+      raw: |
+        wget https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_{{ zabbix_version }}+ubuntu24.04_all.deb -O /tmp/zabbix-release.deb && \
+        dpkg -i /tmp/zabbix-release.deb && \
+        apt-get update
 
-    - name: Update apt cache
-      apt:
-        update_cache: yes
+    - name: Install Zabbix agent
+      raw: |
+        apt-get install -y zabbix-agent
 
-    - name: Install Zabbix Agent
-      apt:
-        name: zabbix-agent
-        state: present
-
-    - name: Configure Zabbix Agent
+    - name: Configure Zabbix agent
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: "{{ item.regexp }}"
@@ -39,18 +30,16 @@
         - { regexp: "^ServerActive=", line: "ServerActive={{ zabbix_server_ip }}" }
         - { regexp: "^Hostname=", line: "Hostname={{ inventory_hostname }}" }
 
-    - name: Restart and enable Zabbix Agent service
-      systemd:
-        name: zabbix-agent
-        state: restarted
-        enabled: yes
+    - name: Restart and enable Zabbix agent service
+      raw: |
+        systemctl restart zabbix-agent && systemctl enable zabbix-agent
 
-    - name: Verify Zabbix Agent service status
-      command: systemctl status zabbix-agent
+    - name: Verify Zabbix agent service status
+      raw: |
+        systemctl is-active zabbix-agent
       register: zabbix_status
-      failed_when: "'active (running)' not in zabbix_status.stdout"
-      ignore_errors: yes
+      failed_when: "'active' not in zabbix_status.stdout"
 
-    - name: Debug Zabbix Agent status
+    - name: Debug Zabbix agent status
       debug:
         var: zabbix_status.stdout
