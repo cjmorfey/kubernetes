@@ -5,6 +5,11 @@
     - name: Install required packages
       raw: |
         apt-get update && apt-get install -y runc psmisc git
+        
+    - name: Load br_netfilter module
+      raw: |
+        modprobe br_netfilter && \
+        echo "br_netfilter" >> /etc/modules-load.d/br_netfilter.conf
 
     - name: Enable net.bridge.bridge-nf-call-* settings
       raw: |
@@ -15,8 +20,8 @@
 
     - name: Add Kubernetes repository
       raw: |
-        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg && \
-        echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /" > /etc/apt/sources.list.d/kubernetes.list && \
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/latest/deb/Release.key | gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg && \
+        echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/latest/deb/ /" > /etc/apt/sources.list.d/kubernetes.list && \
         apt-get update
 
     - name: Remove old Kubernetes packages
