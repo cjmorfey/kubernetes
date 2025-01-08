@@ -1,0 +1,33 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update package cache and upgrade all packages
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    - name: Check if kernel update requires reboot
+      shell: |
+        latest_kernel=$(dpkg -l | grep linux-image | awk '{print $2}' | sort -V | tail -n 1)
+        current_kernel=$(uname -r)
+        if [ "$latest_kernel" != "$current_kernel" ]; then
+          echo "reboot_needed"
+        else
+          echo "no_reboot"
+        fi
+      register: reboot_hint
+      changed_when: false
+
+    - name: Set reboot_needed fact
+      set_fact:
+        reboot_needed: "{{ 'reboot_needed' in reboot_hint.stdout }}"
+
+    - name: Reboot the servers if needed
+      reboot:
+        reboot_timeout: 60
+      when: reboot_needed
+
+    - name: Wait for servers to be reachable
+      wait_for_connection:
+        delay: 10
+        timeout: 180
