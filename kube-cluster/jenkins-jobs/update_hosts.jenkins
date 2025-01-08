@@ -25,7 +25,7 @@ pipeline {
               ANSIBLE_FORCE_COLOR = true
           }
           steps {
-              echo " ==========UPDATING-CENTOS========= "
+              echo " ==========UPDATING-HOSTS========= "
               sh "ansible-playbook kube-cluster/ansible-playbook/${params.SERVER_GROUP}-update.yml -i kube-cluster/hosts-${params.SERVER_GROUP}"
           }
       }
