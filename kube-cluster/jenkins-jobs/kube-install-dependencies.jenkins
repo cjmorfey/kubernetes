@@ -1,6 +1,15 @@
 #!groovy
  // PreParations
- properties([disableConcurrentBuilds()])
+ properties([
+    disableConcurrentBuilds(),
+    parameters([
+        choice(
+            name: 'SERVER_GROUP',
+            choices: ['centos', 'ubuntu'],
+            description: 'Select the group of servers to target (CentOS or Ubuntu)'
+        )
+    ])
+])
  pipeline {
      agent {
          label 'controller'
@@ -11,13 +20,13 @@
          ansiColor("xterm")
      }
      stages {
-         stage('Docker') {
+         stage('Install Docker') {
              environment {
                  ANSIBLE_FORCE_COLOR = true
              }
              steps {
                  echo " ==========Install Docker========= "
-                 sh 'ansible-playbook kube-cluster/ansible-playbook/install_docker.yml -i kube-cluster/hosts'
+                 sh "ansible-playbook kube-cluster/ansible-playbook/install_docker_${params.SERVER_GROUP}.yml -i kube-cluster/hosts-${params.SERVER_GROUP}"
              }
          }
          stage('Preparations') {
@@ -26,7 +35,7 @@
              }
              steps {
                  echo " ==========Install Dependencies========= "
-                 sh 'ansible-playbook kube-cluster/ansible-playbook/preparation-steps.yml -i kube-cluster/hosts'
+                 sh "ansible-playbook kube-cluster/ansible-playbook/preparation-steps-${params.SERVER_GROUP}.yml -i kube-cluster/hosts-${params.SERVER_GROUP}"
              }
          }
      }
