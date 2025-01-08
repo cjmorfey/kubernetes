@@ -26,7 +26,7 @@ pipeline {
             }
             steps {
               echo " ==========Clean Hosts========= "
-              sh "ansible-playbook kube-cluster/ansible-playbook/clean_k8s_${params.SERVER_GROUP}.yml -i kube-cluster/${params.SERVER_GROUP}"
+              sh "ansible-playbook kube-cluster/ansible-playbook/clean_k8s_${params.SERVER_GROUP}.yml -i kube-cluster/hosts-${params.SERVER_GROUP}"
             }
         }
     }
