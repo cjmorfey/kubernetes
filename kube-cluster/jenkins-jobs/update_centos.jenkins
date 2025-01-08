@@ -5,7 +5,7 @@ properties([
     parameters([
         choice(
             name: 'SERVER_GROUP',
-            choices: ['hosts-centos', 'hosts-ubuntu'],
+            choices: ['centos', 'ubuntu'],
             description: 'Select the group of servers to target (CentOS or Ubuntu)'
         )
     ])
