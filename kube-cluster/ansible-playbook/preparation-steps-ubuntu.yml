@@ -1,0 +1,38 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install required packages
+      raw: |
+        apt-get update && apt-get install -y runc psmisc git
+
+    - name: Enable net.bridge.bridge-nf-call-* settings
+      raw: |
+        echo "net.bridge.bridge-nf-call-ip6tables=1" >> /etc/sysctl.conf && \
+        echo "net.bridge.bridge-nf-call-iptables=1" >> /etc/sysctl.conf && \
+        echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && \
+        sysctl -p
+
+    - name: Add Kubernetes repository
+      raw: |
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg && \
+        echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /" > /etc/apt/sources.list.d/kubernetes.list && \
+        apt-get update
+
+    - name: Remove old Kubernetes packages
+      raw: |
+        apt-get remove -y kubelet kubectl kubeadm || true
+
+    - name: Install Kubernetes packages
+      raw: |
+        apt-get install -y kubelet kubectl kubeadm && \
+        apt-mark hold kubelet kubectl kubeadm
+
+    - name: Enable and start kubelet
+      raw: |
+        systemctl enable kubelet && systemctl start kubelet
+
+    - name: Ensure containerd is installed and running
+      raw: |
+        apt-get install -y containerd && \
+        systemctl enable containerd && systemctl start containerd

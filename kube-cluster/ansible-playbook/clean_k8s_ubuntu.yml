@@ -1,0 +1,43 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Remove Docker and Kubernetes-related packages
+      raw: |
+        apt-get purge -y docker-ce docker-ce-cli containerd.io kubelet kubectl kubeadm || true && \
+        apt-get autoremove -y && \
+        apt-get autoclean
+
+    - name: Stop and disable kubelet service
+      raw: |
+        systemctl stop kubelet || true && \
+        systemctl disable kubelet || true
+
+    - name: Flush IPTables rules (Kubernetes-related)
+      raw: |
+        iptables -F && \
+        iptables -t nat -F && \
+        iptables -t mangle -F && \
+        iptables -X
+      ignore_errors: yes
+
+    - name: Reboot the servers
+      reboot:
+        reboot_timeout: 60
+
+    - name: Remove residual directories and files
+      raw: |
+        rm -rf /var/lib/docker /var/lib/dockershim /etc/docker /etc/kubernetes \
+               /root/cluster_initialized.txt /root/node_joined.txt /root/pod_network_setup.txt \
+               /etc/apt/sources.list.d/kubernetes.list /root/.kube
+
+- hosts: master
+  become: yes
+  tasks:
+    - name: Remove Kubernetes master-specific directories
+      raw: |
+        rm -rf /var/lib/kubelet /var/lib/etcd /var/lib/docker /var/lib/dockershim
+
+    - name: Debug completion message
+      debug:
+        msg: "Cleanup completed for master nodes."
