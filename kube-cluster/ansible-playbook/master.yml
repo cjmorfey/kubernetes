@@ -1,5 +1,8 @@
 - hosts: master
   become: yes
+  vars:
+    master_ip: "192.168.1.95"
+
   tasks:
     - name: Initialize the cluster
       shell: kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=SystemVerification
@@ -50,7 +53,6 @@
 
     - name: Extract token and hash from join command
       set_fact:
-        master_ip: "{{ ansible_host }}"
         join_command: "{{ join_command_output.stdout }}"
         token: "{{ join_command.split(' ')[4] }}"
         ca_hash: "{{ join_command.split(' ')[6].split(':')[-1] }}"
@@ -58,7 +60,7 @@
     - name: Save join variables to hostvars
       set_fact:
         worker_join_vars:
-          master_ip: "{{ ansible_host }}"
+          master_ip: "{{ master_ip }}"
           token: "{{ join_command.split(' ')[4] }}"
           ca_hash: "{{ join_command.split(' ')[6].split(':')[-1] }}"
       delegate_to: localhost
@@ -70,12 +72,15 @@
 
 - hosts: workers
   become: yes
+  vars:
+    master_ip: "{{ master_ip | default('192.168.1.95') }}"
+
   tasks:
     - name: Synchronize kube config
       shell: rsync -acP /opt/kuber-volume/.kube/ $HOME/.kube/
 
     - name: Join worker nodes to the cluster
-      shell: kubeadm join {{ hostvars[groups['master'][0]]['worker_join_vars']['master_ip'] }}:6443 --token {{ hostvars[groups['master'][0]]['worker_join_vars']['token'] }} --discovery-token-ca-cert-hash sha256:{{ hostvars[groups['master'][0]]['worker_join_vars']['ca_hash'] }}
+      shell: kubeadm join {{ master_ip }}:6443 --token {{ hostvars[groups['master'][0]]['worker_join_vars']['token'] }} --discovery-token-ca-cert-hash sha256:{{ hostvars[groups['master'][0]]['worker_join_vars']['ca_hash'] }}
       register: join_output
       failed_when: "'error' in join_output.stderr or join_output.rc != 0"
 
