@@ -17,7 +17,7 @@ pipeline {
             }
             steps {
                 echo "-===Zabbix-agent will be installed===-"
-                sh 'ansible-playbook kube-cluster/ansible-playbook/install_zb_ag.yml -i kube-cluster/hosts-ubuntu'
+                sh 'ansible-playbook kube-cluster/ansible-playbook/install_zb_ag-ubuntu-server-24.yml -i kube-cluster/hosts-ubuntu'
             }
         }
     }
