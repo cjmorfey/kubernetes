@@ -1,0 +1,39 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install containerd dependencies
+      raw: |
+        apt-get update && apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+
+    - name: Add Docker repository
+      raw: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable" > /etc/apt/sources.list.d/docker.list && \
+        apt-get update
+
+    - name: Install containerd.io
+      raw: |
+        apt-get install -y containerd.io
+
+    - name: Create containerd configuration file
+      raw: |
+        mkdir -p /etc/containerd && containerd config default > /etc/containerd/config.toml
+
+    - name: Update containerd configuration (use systemd as cgroup driver)
+      raw: |
+        sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+
+    - name: Restart containerd
+      raw: |
+        systemctl restart containerd && systemctl enable containerd
+
+    - name: Verify containerd status
+      raw: |
+        systemctl is-active containerd
+      register: containerd_status
+      failed_when: "'active' not in containerd_status.stdout"
+
+    - name: Display containerd status
+      debug:
+        var: containerd_status.stdout
