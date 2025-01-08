@@ -20,7 +20,7 @@ pipeline {
         ansiColor("xterm")
     }
   stages {
-      stage('Update_Centos') {
+      stage('Update_hosts') {
           environment {
               ANSIBLE_FORCE_COLOR = true
           }
