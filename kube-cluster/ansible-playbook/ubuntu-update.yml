@@ -2,9 +2,8 @@
   become: yes
   tasks:
     - name: Update package cache and upgrade all packages
-      apt:
-        upgrade: dist
-        update_cache: yes
+      raw: |
+        apt-get update && apt-get upgrade -y
 
     - name: Check if kernel update requires reboot
       shell: |
