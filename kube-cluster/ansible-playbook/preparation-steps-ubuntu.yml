@@ -5,6 +5,11 @@
     - name: Install required packages
       raw: |
         apt-get update && apt-get install -y runc psmisc git
+        
+    - name: Load br_netfilter module
+      raw: |
+        modprobe br_netfilter && \
+        echo "br_netfilter" >> /etc/modules-load.d/br_netfilter.conf
 
     - name: Enable net.bridge.bridge-nf-call-* settings
       raw: |
