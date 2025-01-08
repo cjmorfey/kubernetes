@@ -1,0 +1,33 @@
+#!groovy
+//Clean host
+properties([
+    disableConcurrentBuilds(),
+    parameters([
+        choice(
+            name: 'SERVER_GROUP',
+            choices: ['centos', 'ubuntu'],
+            description: 'Select the group of servers to target (CentOS or Ubuntu)'
+        )
+    ])
+])
+pipeline {
+    agent {
+        label 'controller'
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+        ansiColor("xterm")
+    }
+    stages {
+        stage('Clean K8S hosts') {
+            environment {
+                ANSIBLE_FORCE_COLOR = true
+            }
+            steps {
+              echo " ==========Clean Hosts========= "
+              sh "ansible-playbook kube-cluster/ansible-playbook/clean_k8s_${params.SERVER_GROUP}.yml -i kube-cluster/${params.SERVER_GROUP}"
+            }
+        }
+    }
+}
