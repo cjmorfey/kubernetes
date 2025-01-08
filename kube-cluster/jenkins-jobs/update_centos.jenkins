@@ -1,6 +1,15 @@
 #!groovy
-// Update Centos
-properties([disableConcurrentBuilds()])
+// Update Servers k8s
+properties([
+    disableConcurrentBuilds(),
+    parameters([
+        choice(
+            name: 'SERVER_GROUP',
+            choices: ['centos', 'ubuntu'],
+            description: 'Select the group of servers to target (CentOS or Ubuntu)'
+        )
+    ])
+])
 pipeline {
     agent {
         label 'controller'
@@ -11,18 +20,13 @@ pipeline {
         ansiColor("xterm")
     }
   stages {
-      stage("Uptime Jenkins Machine") {
-          steps {
-              sh 'uptime'
-          }
-      }
       stage('Update_Centos') {
           environment {
               ANSIBLE_FORCE_COLOR = true
           }
           steps {
               echo " ==========UPDATING-CENTOS========= "
-              sh 'ansible-playbook kube-cluster/ansible-playbook/centos-updating.yml -i kube-cluster/hosts'
+              sh "ansible-playbook kube-cluster/ansible-playbook/${params.SERVER_GROUP}-update.yml -i kube-cluster/hosts-${params.SERVER_GROUP}"
           }
       }
   }
