@@ -1,0 +1,24 @@
+---
+- import_playbook: preparation-steps-ubuntu.yml
+- import_playbook: master.yml
+- import_playbook: workers.yml
+
+- name: Verify cluster readiness
+  hosts: master
+  become: true
+  tasks:
+    - name: Wait for all expected nodes to register
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes -o name
+      register: cluster_nodes
+      changed_when: false
+      until: cluster_nodes.stdout_lines | length == (groups['master'] | length + groups['workers'] | length)
+      retries: 30
+      delay: 10
+
+    - name: Wait for all nodes to become Ready
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf wait --for=condition=Ready nodes --all --timeout=300s
+      changed_when: false
+
+    - name: Wait for CoreDNS
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf -n kube-system rollout status deployment/coredns --timeout=300s
+      changed_when: false

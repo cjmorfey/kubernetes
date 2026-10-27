@@ -1,22 +1,20 @@
-- hosts: master
-  become: yes
-  gather_facts: false
+---
+- name: Generate a short-lived worker join command
+  hosts: master
+  become: true
   tasks:
-    - name: Get join command
-      command: kubeadm token create --print-join-command
-      register: join_command_output
+    - name: Create join token in memory
+      ansible.builtin.command: kubeadm token create --ttl 15m --print-join-command
+      register: worker_join
+      no_log: true
+      changed_when: true
 
-    - name: Save join command to a file
-      copy:
-        content: "{{ join_command_output.stdout }}"
-        dest: /opt/kuber-volume/join_command.sh
-        mode: '0777'
-
-- hosts: workers
-  become: yes
+- name: Join workers without resetting existing nodes
+  hosts: workers
+  become: true
   tasks:
-    - name: reset Cluster after ADD
-      shell: kubeadm reset -f
-
-    - name: join to cluster
-      shell: sh /opt/kuber-volume/join_command.sh
+    - name: Join worker once
+      ansible.builtin.command:
+        cmd: "{{ hostvars[groups['master'][0]].worker_join.stdout }} --cri-socket=unix:///run/containerd/containerd.sock"
+        creates: /etc/kubernetes/kubelet.conf
+      no_log: true

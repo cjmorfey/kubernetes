@@ -1,43 +1,139 @@
 ---
-- hosts: all
-  become: yes
+- name: Bootstrap Python on clean Ubuntu
+  hosts: all
+  become: true
+  gather_facts: false
   tasks:
-    - name: Install required packages
-      raw: |
-        apt-get update && apt-get install -y runc psmisc git
-        
-    - name: Load br_netfilter module
-      raw: |
-        modprobe br_netfilter && \
-        echo "br_netfilter" >> /etc/modules-load.d/br_netfilter.conf
+    - name: Install Python when absent
+      ansible.builtin.raw: |
+        if ! test -x /usr/bin/python3; then
+          apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3
+          echo PYTHON_BOOTSTRAPPED
+        fi
+      register: python_bootstrap
+      changed_when: "'PYTHON_BOOTSTRAPPED' in python_bootstrap.stdout"
 
-    - name: Enable net.bridge.bridge-nf-call-* settings
-      raw: |
-        echo "net.bridge.bridge-nf-call-ip6tables=1" >> /etc/sysctl.conf && \
-        echo "net.bridge.bridge-nf-call-iptables=1" >> /etc/sysctl.conf && \
-        echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && \
-        sysctl -p
+- name: Prepare Ubuntu Kubernetes nodes
+  hosts: all
+  become: true
+  tasks:
+    - name: Validate supported OS and inventory
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.distribution == 'Ubuntu'
+          - ansible_facts.distribution_version in ['22.04', '24.04']
+          - groups['master'] | length == 1
+          - groups['workers'] | length > 0
+        fail_msg: Use Ubuntu Server 22.04 or 24.04 LTS with one master and at least one worker.
 
-    - name: Add Kubernetes repository
-      raw: |
-        curl -fsSL https://pkgs.k8s.io/core:/stable:/latest/deb/Release.key | gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg && \
-        echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/latest/deb/ /" > /etc/apt/sources.list.d/kubernetes.list && \
-        apt-get update
+    - name: Install prerequisites and Ubuntu containerd
+      ansible.builtin.apt:
+        name: [ca-certificates, curl, gpg, containerd, conntrack, socat, iptables]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
 
-    - name: Remove old Kubernetes packages
-      raw: |
-        apt-get remove -y kubelet kubectl kubeadm || true
+    - name: Disable active swap
+      ansible.builtin.command: swapoff -a
+      when: ansible_facts.swaptotal_mb | int > 0
 
-    - name: Install Kubernetes packages
-      raw: |
-        apt-get install -y kubelet kubectl kubeadm && \
-        apt-mark hold kubelet kubectl kubeadm
+    - name: Disable swap mounts after reboot
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^(\s*[^#\s]+\s+\S+\s+swap\s+.*)$'
+        replace: '# Disabled for Kubernetes: \1'
 
-    - name: Enable and start kubelet
-      raw: |
-        systemctl enable kubelet && systemctl start kubelet
+    - name: Persist kernel modules
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/kubernetes.conf
+        mode: '0644'
+        content: |
+          overlay
+          br_netfilter
 
-    - name: Ensure containerd is installed and running
-      raw: |
-        apt-get install -y containerd && \
-        systemctl enable containerd && systemctl start containerd
+    - name: Load kernel modules
+      ansible.builtin.command: "modprobe {{ item }}"
+      loop: [overlay, br_netfilter]
+      changed_when: false
+
+    - name: Persist Kubernetes networking settings
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/99-kubernetes.conf
+        mode: '0644'
+        content: |
+          net.bridge.bridge-nf-call-iptables = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.ipv4.ip_forward = 1
+
+    - name: Apply networking settings
+      ansible.builtin.command: sysctl --system
+      changed_when: false
+
+    - name: Create containerd configuration directory
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+        mode: '0755'
+
+    - name: Read default containerd configuration
+      ansible.builtin.command: containerd config default
+      register: containerd_defaults
+      changed_when: false
+
+    - name: Configure containerd CRI with systemd cgroups
+      ansible.builtin.copy:
+        dest: /etc/containerd/config.toml
+        mode: '0644'
+        content: "{{ containerd_defaults.stdout | replace('SystemdCgroup = false', 'SystemdCgroup = true') }}\n"
+      notify: Restart containerd
+
+    - name: Apply runtime configuration before kubeadm
+      ansible.builtin.meta: flush_handlers
+
+    - name: Enable containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: started
+        enabled: true
+
+    - name: Create APT key directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Kubernetes repository key
+      ansible.builtin.get_url:
+        url: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/Release.key"
+        dest: /etc/apt/keyrings/kubernetes.asc
+        mode: '0644'
+
+    - name: Configure versioned Kubernetes repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes.asc] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/ /"
+        filename: kubernetes
+        state: present
+
+    - name: Install Kubernetes components
+      ansible.builtin.apt:
+        name: [kubelet, kubeadm, kubectl]
+        state: present
+        update_cache: true
+
+    - name: Hold Kubernetes components against unattended upgrades
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: [kubelet, kubeadm, kubectl]
+
+    - name: Enable kubelet
+      ansible.builtin.systemd:
+        name: kubelet
+        enabled: true
+        state: started
+
+  handlers:
+    - name: Restart containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
