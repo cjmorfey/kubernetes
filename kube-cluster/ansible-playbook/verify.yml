@@ -1,0 +1,39 @@
+---
+- name: Verify expected cluster members and system services
+  hosts: master
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Wait for each expected node to become Ready
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig=/etc/kubernetes/admin.conf
+          - wait
+          - --for=condition=Ready
+          - "node/{{ item }}"
+          - --timeout=300s
+      loop: "{{ groups['k8s'] }}"
+      register: expected_node
+      until: expected_node.rc == 0
+      retries: 6
+      delay: 10
+      changed_when: false
+
+    - name: Wait for Flannel on all nodes
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf -n kube-flannel rollout status daemonset/kube-flannel-ds --timeout=300s
+      changed_when: false
+
+    - name: Wait for CoreDNS
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf -n kube-system rollout status deployment/coredns --timeout=300s
+      changed_when: false
+
+    - name: Show node addresses and versions
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes -o wide
+      register: ready_nodes
+      changed_when: false
+
+    - name: Print result
+      ansible.builtin.debug:
+        msg: "{{ ready_nodes.stdout_lines }}"

@@ -1,0 +1,55 @@
+---
+- name: Validate all nodes before installing Kubernetes
+  hosts: k8s
+  become: true
+  any_errors_fatal: true
+  tasks:
+    - name: Check OS, resources and service manager
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.distribution == 'Ubuntu'
+          - ansible_facts.distribution_version in ['22.04', '24.04']
+          - ansible_facts.service_mgr == 'systemd'
+          - ansible_facts.memtotal_mb | int >= 1700
+          - inventory_hostname not in groups['master'] or ansible_facts.processor_vcpus | int >= 2
+          - inventory_hostname is match('^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$')
+          - inventory_hostname | length <= 253
+        fail_msg: Require Ubuntu 22.04/24.04, systemd, 2 GiB RAM and 2 CPUs on master; use DNS-compatible inventory names.
+
+    - name: Validate master address
+      ansible.builtin.assert:
+        that: master_ip in ansible_facts.all_ipv4_addresses
+      when: inventory_hostname in groups['master']
+
+    - name: Select the existing LAN address without requiring DNS on clean nodes
+      ansible.builtin.set_fact:
+        node_ip: "{{ cluster_node_ip | default(ansible_host if ansible_host | default('') is match('^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$') else ansible_facts.default_ipv4.address) }}"
+
+    - name: Check that node IP is assigned locally
+      ansible.builtin.assert:
+        that: node_ip in ansible_facts.all_ipv4_addresses
+        fail_msg: Set cluster_node_ip to this node's existing LAN IPv4 address.
+
+    - name: Verify unique node IPs and machine identities
+      ansible.builtin.assert:
+        that:
+          - groups['k8s'] | map('extract', hostvars, 'node_ip') | unique | length == groups['k8s'] | length
+          - groups['k8s'] | map('extract', hostvars, ['ansible_facts', 'machine_id']) | unique | length == groups['k8s'] | length
+        fail_msg: Nodes must have unique IPs and machine IDs. Regenerate machine IDs on cloned Ubuntu images.
+      run_once: true
+
+    - name: Check for an active UFW firewall
+      ansible.builtin.command: ufw status
+      register: node_ufw
+      changed_when: false
+      failed_when: node_ufw.rc not in [0, 2] and 'No such file' not in (node_ufw.msg | default(''))
+
+    - name: Report firewall prerequisites
+      ansible.builtin.debug:
+        msg: 'UFW is active: allow TCP 6443/10250, UDP 8472 between nodes, and routed pod traffic before continuing. See README.'
+      when: "'Status: active' in node_ufw.stdout | default('')"
+
+    - name: Test worker connectivity to the master address
+      ansible.builtin.command: "ip route get {{ master_ip }}"
+      changed_when: false
+      when: inventory_hostname in groups['workers']

@@ -2,11 +2,17 @@
 - name: Initialize control plane
   hosts: master
   become: true
+  any_errors_fatal: true
   tasks:
     - name: Verify that the original control-plane IP belongs to this host
       ansible.builtin.assert:
         that: master_ip in ansible_facts.all_ipv4_addresses
         fail_msg: The master must retain its original IP address.
+
+    - name: Read installed kubeadm version
+      ansible.builtin.command: kubeadm version -o short
+      register: kubeadm_binary
+      changed_when: false
 
     - name: Initialize Kubernetes once
       ansible.builtin.command:
@@ -16,8 +22,42 @@
           - "--apiserver-advertise-address={{ master_ip }}"
           - "--control-plane-endpoint={{ master_ip }}:6443"
           - "--pod-network-cidr={{ pod_network_cidr }}"
+          - "--service-cidr={{ service_network_cidr }}"
+          - "--node-name={{ inventory_hostname }}"
+          - "--kubernetes-version={{ kubeadm_binary.stdout }}"
           - --cri-socket=unix:///run/containerd/containerd.sock
+          - --skip-token-print
+          - --token-ttl=15m
         creates: /etc/kubernetes/admin.conf
+
+    - name: Verify initialized API before configuring the network
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get --raw=/readyz
+      register: api_ready
+      changed_when: false
+      until: api_ready.rc == 0
+      retries: 30
+      delay: 5
+
+    - name: Read initialized cluster networking configuration
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig=/etc/kubernetes/admin.conf
+          - -n
+          - kube-system
+          - get
+          - configmap
+          - kubeadm-config
+          - '-o=jsonpath={.data.ClusterConfiguration}'
+      register: kubeadm_cluster_config
+      changed_when: false
+
+    - name: Refuse in-place changes to existing cluster networks
+      ansible.builtin.assert:
+        that:
+          - (kubeadm_cluster_config.stdout | from_yaml).networking.podSubnet == pod_network_cidr
+          - (kubeadm_cluster_config.stdout | from_yaml).networking.serviceSubnet == service_network_cidr
+        fail_msg: Existing cluster CIDRs differ. Restore group_vars or plan an explicit rebuild before applying a new network.
 
     - name: Create root kubeconfig directory
       ansible.builtin.file:
@@ -37,14 +77,19 @@
     - name: Download pinned Flannel manifest
       ansible.builtin.get_url:
         url: "https://github.com/flannel-io/flannel/releases/download/{{ flannel_version }}/kube-flannel.yml"
-        dest: /root/kube-flannel.yml
+        dest: "/root/kube-flannel-{{ flannel_version }}.upstream.yml"
         mode: '0600'
 
-    - name: Configure Flannel pod CIDR
-      ansible.builtin.replace:
-        path: /root/kube-flannel.yml
-        regexp: '"Network": "[^"]+"'
-        replace: '"Network": "{{ pod_network_cidr }}"'
+    - name: Read upstream network manifest
+      ansible.builtin.slurp:
+        src: "/root/kube-flannel-{{ flannel_version }}.upstream.yml"
+      register: flannel_upstream
+
+    - name: Render Flannel CIDR without modifying the upstream download
+      ansible.builtin.copy:
+        dest: /root/kube-flannel.yml
+        mode: '0600'
+        content: "{{ flannel_upstream.content | b64decode | regex_replace('\"Network\": \"[^\"]+\"', '\"Network\": \"' + pod_network_cidr + '\"') }}"
 
     - name: Apply Flannel network
       ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /root/kube-flannel.yml

@@ -1,6 +1,12 @@
+# Keep existing worker addresses in DNS or set ansible_host to their current IP.
 [master]
-master-01-u.k8s ansible_host=master-01-u.k8s
+master-01-u.k8s ansible_host=192.168.1.95
+
 [workers]
 worker-01-u.k8s ansible_host=worker-01-u.k8s
 worker-02-u.k8s ansible_host=worker-02-u.k8s
 worker-03-u.k8s ansible_host=worker-03-u.k8s
+
+[k8s:children]
+master
+workers

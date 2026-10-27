@@ -1,34 +1,15 @@
 ---
-- name: Bootstrap Python on clean Ubuntu
-  hosts: all
-  become: true
-  gather_facts: false
-  tasks:
-    - name: Install Python when absent
-      ansible.builtin.raw: |
-        if ! test -x /usr/bin/python3; then
-          apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3
-          echo PYTHON_BOOTSTRAPPED
-        fi
-      register: python_bootstrap
-      changed_when: "'PYTHON_BOOTSTRAPPED' in python_bootstrap.stdout"
+- import_playbook: bootstrap.yml
+- import_playbook: preflight.yml
 
 - name: Prepare Ubuntu Kubernetes nodes
-  hosts: all
+  hosts: k8s
+  any_errors_fatal: true
   become: true
   tasks:
-    - name: Validate supported OS and inventory
-      ansible.builtin.assert:
-        that:
-          - ansible_facts.distribution == 'Ubuntu'
-          - ansible_facts.distribution_version in ['22.04', '24.04']
-          - groups['master'] | length == 1
-          - groups['workers'] | length > 0
-        fail_msg: Use Ubuntu Server 22.04 or 24.04 LTS with one master and at least one worker.
-
     - name: Install prerequisites and Ubuntu containerd
       ansible.builtin.apt:
-        name: [ca-certificates, curl, gpg, containerd, conntrack, socat, iptables]
+        name: [ca-certificates, curl, gpg, containerd, conntrack, socat, iptables, python3-apt]
         state: present
         update_cache: true
         cache_valid_time: 3600
@@ -114,11 +95,62 @@
         filename: kubernetes
         state: present
 
-    - name: Install Kubernetes components
+    - name: Read installed master package version
+      ansible.builtin.command:
+        argv: [dpkg-query, -W, '-f=${db:Status-Status} ${Version}', kubeadm]
+        expand_argument_vars: false
+      delegate_to: "{{ groups['master'][0] }}"
+      run_once: true
+      register: master_package
+      changed_when: false
+      failed_when: false
+
+    - name: List available versions in the selected minor repository
+      ansible.builtin.command: apt-cache madison kubeadm
+      delegate_to: "{{ groups['master'][0] }}"
+      run_once: true
+      register: available_kubeadm
+      changed_when: false
+
+    - name: Require a resolvable package version
+      ansible.builtin.assert:
+        that: kubernetes_package_version | length > 0 or master_package.stdout.startswith('installed ') or available_kubeadm.stdout_lines | length > 0
+        fail_msg: No kubeadm package found. Check the selected minor repository and node internet access.
+
+    - name: Select one exact version for every node, reusing the master on reruns
+      ansible.builtin.set_fact:
+        selected_package_version: "{{ kubernetes_package_version if kubernetes_package_version | length > 0 else (master_package.stdout.split()[1] if master_package.stdout.startswith('installed ') else available_kubeadm.stdout_lines[0].split('|')[1] | trim) }}"
+
+    - name: Check that selected packages belong to the configured minor
+      ansible.builtin.assert:
+        that: selected_package_version.startswith(kubernetes_minor_version[1:] + '.')
+        fail_msg: Installed master and configured minor differ. Use a separate kubeadm upgrade procedure.
+
+    - name: Inspect already installed packages
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Prevent implicit upgrades or downgrades of existing nodes
+      ansible.builtin.assert:
+        that: ansible_facts.packages[item][0].version == selected_package_version
+        fail_msg: 'Existing {{ item }} differs from {{ selected_package_version }}. Upgrade nodes explicitly before rerunning setup.'
+      loop: [kubelet, kubeadm, kubectl]
+      when: item in ansible_facts.packages
+
+    - name: Install the same Kubernetes package version on every node
       ansible.builtin.apt:
-        name: [kubelet, kubeadm, kubectl]
+        name:
+          - "kubelet={{ selected_package_version }}"
+          - "kubeadm={{ selected_package_version }}"
+          - "kubectl={{ selected_package_version }}"
         state: present
-        update_cache: true
+
+    - name: Pin kubelet to the existing LAN address
+      ansible.builtin.copy:
+        dest: /etc/default/kubelet
+        mode: '0644'
+        content: "KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }}\n"
+      notify: Restart kubelet
 
     - name: Hold Kubernetes components against unattended upgrades
       ansible.builtin.dpkg_selections:
@@ -136,4 +168,8 @@
     - name: Restart containerd
       ansible.builtin.systemd:
         name: containerd
+        state: restarted
+    - name: Restart kubelet
+      ansible.builtin.systemd:
+        name: kubelet
         state: restarted

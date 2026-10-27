@@ -1,0 +1,18 @@
+---
+- name: Show cluster status
+  hosts: master
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Read nodes and pods
+      ansible.builtin.command: "kubectl --kubeconfig=/etc/kubernetes/admin.conf get {{ item }} -o wide {{ '--all-namespaces' if item == 'pods' else '' }}"
+      loop: [nodes, pods]
+      register: cluster_status
+      changed_when: false
+
+    - name: Print status
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ cluster_status.results }}"
+      loop_control:
+        label: "{{ item.item }}"

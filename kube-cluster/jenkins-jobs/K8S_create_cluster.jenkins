@@ -1,5 +1,5 @@
 #!groovy
-// Jenkins agent requires Ansible and SSH/sudo access to the Ubuntu inventory.
+// Agent needs Ansible, verified SSH host keys and SSH/sudo credentials.
 pipeline {
     agent { label 'controller' }
     options {
@@ -8,15 +8,7 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
     stages {
-        stage('Validate Ubuntu cluster playbook') {
-            steps {
-                sh 'ansible-playbook -i kube-cluster/hosts-ubuntu kube-cluster/ansible-playbook/cluster.yml --syntax-check'
-            }
-        }
-        stage('Bootstrap Ubuntu cluster') {
-            steps {
-                sh 'ansible-playbook -i kube-cluster/hosts-ubuntu kube-cluster/ansible-playbook/cluster.yml'
-            }
-        }
+        stage('Validate') { steps { sh './cluster check' } }
+        stage('Create cluster') { steps { sh './cluster setup' } }
     }
 }

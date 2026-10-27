@@ -1,43 +1,39 @@
 ---
-- hosts: all
-  become: yes
+# Destructive maintenance only. Never called by cluster setup.
+- name: Explicitly reset an Ubuntu kubeadm cluster
+  hosts: k8s
+  become: true
+  any_errors_fatal: true
+  gather_facts: false
+  pre_tasks:
+    - name: Require explicit reset acknowledgement
+      ansible.builtin.assert:
+        that: confirm_cluster_reset | default(false) | bool
+        fail_msg: 'This deletes cluster state and etcd data. To reset intentionally, pass -e confirm_cluster_reset=true.'
   tasks:
-    - name: Remove Docker and Kubernetes-related packages
-      raw: |
-        apt-get purge -y docker-ce docker-ce-cli containerd.io kubelet kubectl kubeadm || true && \
-        apt-get autoremove -y && \
-        apt-get autoclean
+    - name: Reset kubeadm state
+      ansible.builtin.command: kubeadm reset --force --cri-socket=unix:///run/containerd/containerd.sock
+      changed_when: true
 
-    - name: Stop and disable kubelet service
-      raw: |
-        systemctl stop kubelet || true && \
-        systemctl disable kubelet || true
+    - name: Stop kubelet after reset
+      ansible.builtin.systemd:
+        name: kubelet
+        state: stopped
+        enabled: false
 
-    - name: Flush IPTables rules (Kubernetes-related)
-      raw: |
-        iptables -F && \
-        iptables -t nat -F && \
-        iptables -t mangle -F && \
-        iptables -X
-      ignore_errors: yes
+    - name: Remove stale CNI and cluster credentials
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/cni/net.d
+        - /var/lib/cni
+        - /run/flannel
+        - /etc/kubernetes
+        - /var/lib/etcd
+        - /root/.kube
+        - /root/kube-flannel.yml
 
-    - name: Reboot the servers
-      reboot:
-        reboot_timeout: 60
-
-    - name: Remove residual directories and files
-      raw: |
-        rm -rf /var/lib/docker /var/lib/dockershim /etc/docker /etc/kubernetes \
-               /root/cluster_initialized.txt /root/node_joined.txt /root/pod_network_setup.txt \
-               /etc/apt/sources.list.d/kubernetes.list /root/.kube
-
-- hosts: master
-  become: yes
-  tasks:
-    - name: Remove Kubernetes master-specific directories
-      raw: |
-        rm -rf /var/lib/kubelet /var/lib/etcd /var/lib/docker /var/lib/dockershim
-
-    - name: Debug completion message
-      debug:
-        msg: "Cleanup completed for master nodes."
+    - name: Explain remaining network state
+      ansible.builtin.debug:
+        msg: 'kubeadm state removed. General firewall rules were preserved. Reboot reset nodes before rebuilding to clear stale CNI interfaces and transient network state.'

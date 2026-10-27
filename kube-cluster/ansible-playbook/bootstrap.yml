@@ -1,0 +1,33 @@
+---
+- name: Bootstrap clean Ubuntu nodes
+  hosts: k8s
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Validate inventory before modifying nodes
+      ansible.builtin.assert:
+        that:
+          - groups.get('master', []) | length == 1
+          - groups.get('workers', []) | length > 0
+          - groups['master'] | intersect(groups['workers']) | length == 0
+          - groups['k8s'] | difference(groups['master'] + groups['workers']) | length == 0
+          - ansible_play_hosts_all | sort == groups['k8s'] | sort
+        fail_msg: Use one master, at least one worker, and the full k8s inventory without --limit.
+      run_once: true
+
+    - name: Check OS and install Python if needed
+      ansible.builtin.raw: |
+        set -eu
+        . /etc/os-release
+        if [ "$ID" != ubuntu ] || { [ "$VERSION_ID" != 22.04 ] && [ "$VERSION_ID" != 24.04 ]; }; then
+          echo 'Supported OS: Ubuntu Server 22.04 or 24.04 LTS' >&2
+          exit 1
+        fi
+        if ! test -x /usr/bin/python3; then
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y python3
+          echo PYTHON_BOOTSTRAPPED
+        fi
+      register: python_bootstrap
+      changed_when: "'PYTHON_BOOTSTRAPPED' in python_bootstrap.stdout"
