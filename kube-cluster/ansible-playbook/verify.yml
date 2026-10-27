@@ -1,6 +1,6 @@
 ---
 - name: Verify expected cluster members and system services
-  hosts: master
+  hosts: master[0]
   become: true
   gather_facts: false
   any_errors_fatal: true
@@ -8,8 +8,8 @@
     - name: Wait for each expected node to become Ready
       ansible.builtin.command:
         argv:
-          - kubectl
-          - --kubeconfig=/etc/kubernetes/admin.conf
+          - "{{ rke2_kubectl }}"
+          - "--kubeconfig={{ rke2_kubeconfig }}"
           - wait
           - --for=condition=Ready
           - "node/{{ item }}"
@@ -21,16 +21,16 @@
       delay: 10
       changed_when: false
 
-    - name: Wait for Flannel on all nodes
-      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf -n kube-flannel rollout status daemonset/kube-flannel-ds --timeout=300s
+    - name: Wait for Canal on all nodes
+      ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} -n kube-system rollout status daemonset/rke2-canal --timeout=300s"
       changed_when: false
 
     - name: Wait for CoreDNS
-      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf -n kube-system rollout status deployment/coredns --timeout=300s
+      ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} -n kube-system rollout status deployment/rke2-coredns-rke2-coredns --timeout=300s"
       changed_when: false
 
     - name: Show node addresses and versions
-      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes -o wide
+      ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} get nodes -o wide"
       register: ready_nodes
       changed_when: false
 

@@ -11,5 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install validation tools
         run: sudo apt-get update && sudo apt-get install -y ansible shellcheck
-      - name: Check playbooks and worker lifecycle
+      - name: Check RKE2 playbooks and configuration
         run: ./scripts/check.sh

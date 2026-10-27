@@ -8,12 +8,12 @@
     - name: Validate inventory before modifying nodes
       ansible.builtin.assert:
         that:
-          - groups.get('master', []) | length == 1
+          - groups.get('master', []) | length in [1, 3, 5]
           - groups.get('workers', []) | length > 0
           - groups['master'] | intersect(groups['workers']) | length == 0
           - groups['k8s'] | difference(groups['master'] + groups['workers']) | length == 0
           - ansible_play_hosts_all | sort == groups['k8s'] | sort
-        fail_msg: Use one master, at least one worker, and the full k8s inventory without --limit.
+        fail_msg: Use 1, 3 or 5 RKE2 servers in master, at least one worker, and the full inventory without --limit.
       run_once: true
 
     - name: Check OS and install Python if needed

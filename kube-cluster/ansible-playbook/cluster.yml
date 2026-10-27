@@ -1,5 +1,8 @@
 ---
-- import_playbook: preparation-steps-ubuntu.yml
-- import_playbook: master.yml
-- import_playbook: workers.yml
+- import_playbook: validate.yml
+- import_playbook: bootstrap.yml
+- import_playbook: preflight.yml
+- import_playbook: prepare.yml
+- import_playbook: servers.yml
+- import_playbook: agents.yml
 - import_playbook: verify.yml

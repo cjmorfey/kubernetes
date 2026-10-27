@@ -1,10 +1,19 @@
 ---
-kubernetes_minor_version: v1.36
-master_ip: "192.168.1.95"
-pod_network_cidr: "10.244.0.0/16"
-flannel_version: v0.28.10
 ansible_python_interpreter: /usr/bin/python3
-# Empty: use master's installed version, or resolve once on a fresh master.
-# Set an exact Debian version (e.g. from apt-cache madison kubeadm) for reproducible installs.
-kubernetes_package_version: ""
-service_network_cidr: "10.96.0.0/12"
+# Both version and installer are pinned; no moving "stable" channel at deployment time.
+rke2_version: v1.37.1+rke2r1
+rke2_installer_sha256: 42983c86d1da64a92061d83afb57630cedd69241989f1b0673f3db6c3d92ee6b
+# Retain original network addresses. For HA, use an external LB/DNS on TCP 9345 and 6443.
+rke2_registration_address: "192.168.1.95"
+rke2_require_ha: false
+rke2_cluster_cidr: "10.244.0.0/16"
+rke2_service_cidr: "10.96.0.0/12"
+rke2_cluster_dns: "10.96.0.10"
+rke2_cni: canal
+rke2_snapshot_cron: "0 */6 * * *"
+rke2_snapshot_retention: 28
+# Optional S3 snapshot config. Credentials belong in an encrypted Ansible Vault file.
+rke2_s3: {}
+rke2_binary: /usr/local/bin/rke2
+rke2_kubectl: /var/lib/rancher/rke2/bin/kubectl
+rke2_kubeconfig: /etc/rancher/rke2/rke2.yaml

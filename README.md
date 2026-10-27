@@ -1,183 +1,150 @@
-# Kubernetes на чистій Ubuntu
+# Kubernetes на RKE2
 
-Домашній навчальний кластер: **один master і три workers**, встановлення з
-керівного комп'ютера однією командою. Підтримуються чисті **Ubuntu Server
-22.04 / 24.04 LTS** із systemd. IP машин залишаються поточними.
+Встановлення **RKE2 на чисті Ubuntu Server 22.04 / 24.04 LTS** через Ansible.
+RKE2 керує Kubernetes, власним containerd, etcd, Canal, CoreDNS, metrics-server
+і Traefik як єдиним дистрибутивом. Kubeadm, окремий Docker/containerd та NFS
+для встановлення більше не використовуються.
 
 ```sh
 ./cluster setup -u ubuntu -K
 ```
 
-`ubuntu` замініть на користувача, створеного під час встановлення ОС.
-`-K` запитує пароль sudo; для sudo без пароля цей параметр не потрібен.
+Це **створення нового кластера**, а не оновлення kubeadm-кластера на місці.
+Старий Kubernetes на вузлі спричиняє зупинку до встановлення RKE2.
+Для перенесення застосунків і даних дивіться [план міграції](docs/migration.md).
 
-## Перед першим запуском
+## Поточні машини та доступність
 
-1. На керівному комп'ютері встановіть `ansible-core` 2.16 або новіший і Git.
-   Наприклад, на Ubuntu 24.04: `sudo apt-get update && sudo apt-get install -y ansible git`.
-   Клонуйте цей репозиторій і перейдіть до його кореня. Команду запускають на
-   керівному комп'ютері, який має SSH-доступ до всіх вузлів, а не на кожному вузлі.
-2. На кожній машині під час встановлення Ubuntu увімкніть OpenSSH server і
-   створіть користувача із sudo. Якщо SSH відсутній, через консоль виконайте
-   `sudo apt-get update && sudo apt-get install -y openssh-server` та
+Імена, наявні IP та початкові ролі збережено в [inventory](kube-cluster/hosts-ubuntu):
+
+| Група Ansible | Машина | SSH-адреса | Роль RKE2 |
+| --- | --- | --- | --- |
+| master | master-01-u.k8s | 192.168.1.95 | server: control plane + etcd |
+| workers | worker-01-u.k8s | worker-01-u.k8s | agent |
+| workers | worker-02-u.k8s | worker-02-u.k8s | agent |
+| workers | worker-03-u.k8s | worker-03-u.k8s | agent |
+
+**Один server залишається єдиною точкою відмови.** Заміна дистрибутива сама
+по собі не робить цю топологію HA. Вона придатна, якщо допустима зупинка та
+відновлення з backup. Для роботи з вимогою безперервності потрібні **три server,
+щонайменше один agent та окремий відмовостійкий TCP-балансувальник**.
+Інсталяція підтримує 1, 3 або 5 servers; інструкція — [HA](docs/operations.md#ha).
+
+Числових IP workers у проєкті немає: збережіть поточний DNS або `/etc/hosts`
+керівного комп'ютера, або задайте їхні наявні адреси в `ansible_host`.
+Сценарій не змінює Netplan, IP, DNS чи firewall. За кількох мережевих карт
+задайте `cluster_node_ip` у рядку вузла; інакше використовується числовий
+`ansible_host` або IPv4 інтерфейсу з default route. Ім'я вузла задається з inventory.
+
+## Перед запуском
+
+1. На керівному комп'ютері потрібні Git та `ansible-core >= 2.16`.
+   Наприклад, для Ubuntu 24.04: `sudo apt-get update && sudo apt-get install -y ansible git`.
+   Клонуйте репозиторій і перейдіть у його корінь.
+2. На вузлах увімкніть OpenSSH server та користувача із sudo під час встановлення Ubuntu.
+   Якщо SSH відсутній, через консоль: `sudo apt-get install -y openssh-server`,
    `sudo systemctl enable --now ssh`.
-3. Додайте свій SSH-ключ до `~/.ssh/authorized_keys` цього користувача на вузлах.
-   Перевірте fingerprint і перше SSH-з'єднання до кожної адреси з inventory.
-   Для входу за паролем додайте `--ask-pass` (може знадобитися `sshpass` на controller).
-4. Перевірте адреси в [inventory](kube-cluster/hosts-ubuntu). Власник мережі має
-   забезпечити постійні IP через DHCP reservation або налаштування Ubuntu.
-   Сценарій не редагує Netplan, IP чи DNS.
+3. Додайте SSH-ключ керівного комп'ютера до `~/.ssh/authorized_keys` користувача
+   вузла. Перевірте fingerprint та SSH-з'єднання до кожної адреси з inventory.
+   `ubuntu` у прикладах замініть на свого користувача; `-K` запитує пароль sudo.
+4. Виділіть мінімум 4 GiB RAM на кожен вузол, 2 vCPU на server; для робочого
+   навантаження плануйте запас, SSD для etcd і достатній диск для образів та logs.
+   Кожна машина має мати унікальні IP, machine-id, MAC і UUID.
+5. Перевірте DNS, час і вихідний HTTPS до Ubuntu APT, raw.githubusercontent.com,
+   GitHub release assets та реєстрів образів RKE2, зокрема docker.io.
 
-| Роль | Ім'я вузла в Kubernetes | Адреса SSH |
-| --- | --- | --- |
-| Master | master-01-u.k8s | **192.168.1.95** |
-| Worker | worker-01-u.k8s | worker-01-u.k8s |
-| Worker | worker-02-u.k8s | worker-02-u.k8s |
-| Worker | worker-03-u.k8s | worker-03-u.k8s |
+Мережа між вузлами:
 
-Числових IP workers у старому проєкті немає. Залиште їхні імена в DNS або
-`/etc/hosts` керівного комп'ютера. Або вкажіть їхні **наявні** IP у
-`ansible_host` — вигадувати нові адреси не потрібно. Ubuntu-вузлам не потрібно
-вміти розв'язувати ці приватні DNS-імена: для кластерних адрес використовуються IP.
+| Порт | Доступ |
+| --- | --- |
+| TCP 9345, 6443 | усі вузли → servers / registration LB |
+| TCP 2379–2381 | між servers для etcd |
+| TCP 10250, 9099; UDP 8472 | між вузлами: kubelet, Canal health, VXLAN |
+| TCP 80, 443 | клієнти → ingress за вашою схемою публікації |
+| TCP/UDP 30000–32767 | лише якщо використовуєте NodePort |
 
-Для машин із кількома інтерфейсами вкажіть `cluster_node_ip` в inventory:
+Дозвольте forwarding і pod-трафік у власному firewall; VXLAN та etcd повинні
+залишатися у приватній мережі. Pod `10.244.0.0/16`, services `10.96.0.0/12`
+і DNS `10.96.0.10` не повинні конфліктувати з LAN/VPN. Вибирайте мережі до init.
 
-```ini
-worker-01-u.k8s ansible_host=worker-01-u.k8s cluster_node_ip=<наявний-LAN-IP>
-```
-
-За замовчуванням використовується числовий `ansible_host` або IPv4 інтерфейсу
-з default route. Вибрана адреса має бути призначена цьому вузлу; сценарій
-задає її kubelet, але не змінює мережеві налаштування ОС. Імена Kubernetes
-задаються через `--node-name`, тому стандартні hostname чистих ОС не створюють
-однакових імен вузлів. Клоновані машини повинні мати унікальні machine-id, MAC і UUID.
-
-## Вимоги до машин та мережі
-
-- Щонайменше 2 GiB RAM на вузол; master — мінімум 2 vCPU. Для застосунків
-  потрібні додаткові ресурси й місце на диску.
-- Ubuntu APT, pkgs.k8s.io, GitHub і реєстри образів (registry.k8s.io,
-  ghcr.io, docker.io) мають бути доступні з вузлів; потрібні DNS і правильний час.
-- Між вузлами дозволені TCP 6443 до master, TCP 10250 та UDP 8472 для Flannel.
-  На master etcd використовує TCP 2379–2380, локальні компоненти — 10257/10259.
-  NodePort TCP/UDP 30000–32767 відкривайте лише для сервісів, що його використовують.
-- Якщо UFW/інший firewall активний, налаштуйте також forwarding і pod-трафік
-  між вузлами. Сценарій повідомляє про активний UFW і зберігає ваші правила.
-- Pod CIDR `10.244.0.0/16` і service CIDR `10.96.0.0/12` мають не перетинатися
-  між собою, з LAN або VPN. Змінюйте їх до першого встановлення.
-
-## Чотири команди
+## Команди
 
 ```sh
-# Локальна перевірка inventory та синтаксису, без SSH і змін машин
-./cluster check
-
-# Повна підготовка чистих вузлів, створення та перевірка кластера
-./cluster setup -u ubuntu -K
-
-# Вузли та pods у всіх namespaces
-./cluster status -u ubuntu -K
-
-# Отримати admin kubeconfig локально
-./cluster kubeconfig -u ubuntu -K
+./cluster check                         # локально, без SSH та змін машин
+./cluster setup -u ubuntu -K            # підготовка, RKE2 servers/agents, перевірка
+./cluster status -u ubuntu -K           # nodes та pods
+./cluster kubeconfig -u ubuntu -K       # приватний admin kubeconfig
 KUBECONFIG="$PWD/.local/kubeconfig" kubectl get nodes -o wide
+./cluster backup -u ubuntu -K           # snapshot etcd на першому server, також S3 якщо налаштовано
 ```
 
-Ключ можна передати через `--private-key ~/.ssh/lab`. Для іншого inventory:
+Для іншого ключа додайте `--private-key ~/.ssh/lab`. Для іншого inventory:
 `CLUSTER_INVENTORY=/path/to/hosts ./cluster setup -u ubuntu -K`.
-Воно повинне містити `master`, `workers` і спільну групу `k8s:children`.
-Параметри проєкту лежать у `kube-cluster/group_vars/all.yml`; для власного
-inventory скопіюйте поруч каталог `group_vars` або передайте цей файл через
-`-e @kube-cluster/group_vars/all.yml`.
+Inventory має групи `master`, `workers`, `k8s:children`; скопіюйте поруч
+`group_vars` або передайте `-e @kube-cluster/group_vars/all.yml`.
+Перший запис групи `master` — bootstrap server; зберігайте його порядок.
+Setup запускається для повного inventory без `--limit`.
 
-Запускайте setup із повним inventory без `--limit`: спочатку перевіряються
-всі машини, потім створюється master і приєднуються workers. Щоб додати чистий
-worker, додайте його в inventory і повторіть ту саму команду setup.
+Параметри — [group_vars/all.yml](kube-cluster/group_vars/all.yml):
+зафіксовано `v1.37.1+rke2r1` та SHA-256 installer-а з того самого release tag.
+Сам installer перевіряє checksum release artifact. Немає вибору рухомого
+`stable/latest` під час встановлення. Версія однакова на всіх вузлах.
 
-Kubeconfig записується в `.local/kubeconfig` у приватному каталозі `0700`, файл
-має права `0600`, каталог виключений із Git. Він дає повний адміністративний
-доступ. Команда не перезаписує ваш `~/.kube/config`.
+Ansible встановлює Python за потреби, системні залежності й AppArmor tools,
+налаштовує swap, модулі та forwarding, потім встановлює RKE2. Перший server
+запускається перед іншими; решта servers і agents приєднуються послідовно.
+Servers мають taint, щоб звичайні застосунки працювали на agents.
+Перевірка очікує кожен вузол з inventory, Canal і CoreDNS.
 
-## Як влаштоване встановлення
+`setup` не скидає кластер і не виконує автоматичних upgrade/downgrade або
+перезапусків через зміну конфігурації. Інша версія, зміна ролі або відмінний
+наявний конфіг зупиняють виконання: використовуйте [операційні процедури](docs/operations.md).
+Щоб додати чистий agent, додайте його в inventory і повторіть setup.
+Не встановлюйте паралельно системні kubelet чи containerd.
 
-Залишено стандартний **kubeadm + containerd + Flannel**. Це звичайний Kubernetes,
-придатний для вивчення його компонентів. Jenkins, Docker Engine, NFS, Java та
-Zabbix більше не є залежностями встановлення. Python на чистих вузлах
-встановлюється автоматично; Ansible потрібен лише на керівному комп'ютері.
+## Credentials, backups і експлуатація
 
-Сценарій послідовно виконує:
+Конфіг `/etc/rancher/rke2/config.yaml` має права `0600`, каталог — `0700`.
+Server- і agent-токени розділені, передаються через Ansible в пам'яті й приховані
+в логах. RKE2 зберігає їх на вузлах для запуску та повторних приєднань;
+це постійні credentials, а не короткочасні kubeadm-токени.
+Не використовуйте `--diff` для роботи із секретами.
 
-1. Перевірку inventory, Ubuntu, sudo, ресурсів, IP та machine-id.
-2. Встановлення залежностей, вимкнення swap у сесії та fstab, завантаження
-   модулів ядра, налаштування forwarding і containerd із systemd cgroups.
-3. Встановлення однакових версій kubeadm/kubelet/kubectl на всіх вузлах і hold пакетів.
-4. `kubeadm init` з явними версією, IP, ім'ям вузла та CIDR; перевірку API.
-5. Встановлення Flannel із конкретного релізу та приєднання чистих workers.
-6. Очікування **кожного імені з inventory**, Flannel і CoreDNS та показ результату.
+Admin kubeconfig зберігається у `.local/kubeconfig` з правами `0600`; адреса
+`127.0.0.1` замінюється на registration endpoint із TLS SAN. `.local/` виключено
+з Git. Для повсякденної роботи створіть окремі RBAC-доступи замість admin.
 
-Початкові параметри: Kubernetes `v1.36`, Flannel `v0.28.10`.
-За першого встановлення вибирається один доступний patch-реліз Kubernetes,
-а всі вузли отримують саме його. На повторних запусках і під час додавання
-workers використовується версія master. Для повністю відтворюваного першого
-встановлення задайте точну Debian-версію в `kubernetes_package_version`.
+Snapshots etcd створюються кожні 6 годин, стискаються, зберігаються 28 локальних
+копій на кожному server. **Локальні snapshots не захищають від втрати машини.**
+До розміщення важливих даних налаштуйте offsite S3 або зовнішнє копіювання,
+збережіть server token і проведіть тест відновлення. etcd snapshot не містить
+даних PersistentVolume. Інструкції: [backup, recovery, upgrade](docs/operations.md).
 
-Сценарій керує `/etc/containerd/config.toml` і `/etc/default/kubelet`.
-Повторний запуск не скидає кластер, не виконує автоматичних upgrade/downgrade
-Kubernetes і не генерує join-токен, якщо всі workers уже приєднані. Новий токен
-діє 15 хвилин, прихований у логах, зберігається в пам'яті Ansible та відкликається
-після спроб приєднання. При втраті SSH TTL обмежує термін його дії.
+RKE2 надає базові компоненти, але ваші SLA також потребують сховища для PV,
+backup даних застосунків, моніторингу, alerting, політик доступу й TLS для сервісів.
+Ingress — Traefik; bare-metal `LoadBalancer` потребує окремої реалізації.
+Ця конфігурація не заявляє проходження CIS-аудиту.
 
-Зміна minor-версії, CIDR або імен на вже створеному кластері потребує окремого
-плану міграції. Це не HA-кластер: один master є єдиною точкою відмови.
+## Jenkins і перевірки
 
-## Обслуговування та помилки
-
-За невдалого запуску прочитайте помилку і виправте доступ, репозиторій чи мережу,
-після чого повторіть setup. Частково виконаний init/join може залишити конфігурацію;
-наявність файлів сама по собі не означає успіху — фінальна перевірка API та вузлів
-виявить проблему. Корисні команди на вузлі:
-
-```sh
-sudo journalctl -u containerd -u kubelet -n 100 --no-pager
-sudo systemctl status containerd kubelet
-```
-
-Оновлення Ubuntu — окремий `ubuntu-update.yml`: він поважає hold Kubernetes
-і повідомляє про потребу reboot через `/var/run/reboot-required`, без автоматичного
-перезавантаження активного кластера. Перед reboot виконайте drain вузла.
-
-Для навмисного повного видалення стану кластера є окремий сценарій:
-
-```sh
-ansible-playbook kube-cluster/ansible-playbook/clean_k8s_ubuntu.yml -u ubuntu -K -e confirm_cluster_reset=true
-```
-
-Він виконує `kubeadm reset`, видаляє CNI-конфігурацію, credentials та etcd-дані.
-Після reset перезавантажте вузли перед новим setup. Загальні iptables-правила
-не очищуються. Без `confirm_cluster_reset=true` сценарій зупиняється до змін.
-
-## Jenkins, приклади та перевірки
-
-Основний Jenkins pipeline — `kube-cluster/jenkins-jobs/K8S_create_cluster.jenkins`;
-він викликає ті самі `./cluster check` та `./cluster setup`. На агенті `controller`
-налаштуйте Ansible, known_hosts, SSH-ключ і sudo; користувача можна задати через
-`ANSIBLE_REMOTE_USER`. Окрема job підготовки встановлює залежності. Сумісні jobs master/workers також
-викликають повний setup, щоб працювати з чистими машинами.
-
-Застарілі CentOS, Docker/NFS, Java 8, Dashboard та допоміжні jobs перенесено в
-[legacy/](legacy/README.md). Вимкніть старі Jenkins jobs, що використовують їхні
-колишні шляхи. Навчальні `deployments/` і `service-mesh/` встановлюються окремо;
-HPA потребує metrics-server, bare-metal LoadBalancer — реалізації на кшталт MetalLB.
+`kube-cluster/jenkins-jobs/K8S_create_cluster.jenkins` запускає ті самі команди.
+На агенті `controller` налаштуйте Ansible, SSH/known_hosts і sudo; користувача
+можна задати через `ANSIBLE_REMOTE_USER`. Інші підтримувані jobs теж запускають setup.
 
 ```sh
 ./scripts/check.sh
 ```
 
-Перевірки охоплюють синтаксис підтримуваних playbook-ів, shell та локальний
-тест справжнього worker-playbook з підставним kubeadm: успішні joins і відкликання
-токена після помилки. GitHub Actions запускає їх на Ubuntu. Вони не замінюють
-інтеграційного встановлення на справжніх Ubuntu VM.
+Перевіряються shell, синтаксис playbook-ів і рендер реального конфігу для
+bootstrap server, додаткових servers та agent: різні credentials, мережі й snapshots.
+GitHub Actions виконує ті самі перевірки. Встановлення та HA failover на реальних
+Ubuntu VM цими локальними тестами не перевіряються.
 
-Джерела: [створення кластера kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/),
-[container runtime і cgroups](https://kubernetes.io/docs/setup/production-environment/container-runtimes/),
-[Flannel v0.28.10](https://github.com/flannel-io/flannel/releases/tag/v0.28.10).
+Старий kubeadm-сценарій — [legacy/kubeadm](legacy/kubeadm/README.md), інші історичні
+сценарії — [legacy](legacy/README.md); вони не входять до активного встановлення.
+`deployments/` і `service-mesh/` — окремі приклади, автоматично не розгортаються.
+
+Офіційні джерела: [RKE2 Quick Start](https://docs.rke2.io/install/quickstart),
+[HA](https://docs.rke2.io/install/ha), [network requirements](https://docs.rke2.io/install/requirements),
+[backup/restore](https://docs.rke2.io/datastore/backup_restore),
+[зафіксований release](https://github.com/rancher/rke2/releases/tag/v1.37.1%2Brke2r1).

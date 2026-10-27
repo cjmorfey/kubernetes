@@ -1,0 +1,18 @@
+---
+- name: Join RKE2 agents sequentially
+  hosts: workers
+  become: true
+  serial: 1
+  any_errors_fatal: true
+  tasks:
+    - name: Configure and start agent
+      ansible.builtin.include_tasks: tasks/configure-node.yml
+
+    - name: Wait for this agent to register and become Ready before continuing
+      ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} wait --for=condition=Ready node/{{ inventory_hostname }} --timeout=300s"
+      delegate_to: "{{ groups['master'][0] }}"
+      register: agent_ready
+      until: agent_ready.rc == 0
+      retries: 6
+      delay: 10
+      changed_when: false

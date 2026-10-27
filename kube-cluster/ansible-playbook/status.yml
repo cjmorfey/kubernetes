@@ -1,11 +1,11 @@
 ---
 - name: Show cluster status
-  hosts: master
+  hosts: master[0]
   become: true
   gather_facts: false
   tasks:
     - name: Read nodes and pods
-      ansible.builtin.command: "kubectl --kubeconfig=/etc/kubernetes/admin.conf get {{ item }} -o wide {{ '--all-namespaces' if item == 'pods' else '' }}"
+      ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} get {{ item }} -o wide {{ '--all-namespaces' if item == 'pods' else '' }}"
       loop: [nodes, pods]
       register: cluster_status
       changed_when: false

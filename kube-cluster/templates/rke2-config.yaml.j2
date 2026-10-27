@@ -1,0 +1,27 @@
+# Managed by Ansible. This file contains credentials; keep mode 0600.
+node-name: {{ inventory_hostname | to_json }}
+node-ip: {{ node_ip | to_json }}
+{% if inventory_hostname != groups['master'][0] %}
+server: {{ ('https://' + rke2_registration_address + ':9345') | to_json }}
+token: {{ (hostvars[groups['master'][0]].rke2_join_token if inventory_hostname in groups['master'] else hostvars[groups['master'][0]].rke2_agent_join_token) | to_json }}
+{% endif %}
+{% if inventory_hostname in groups['master'] %}
+agent-token: {{ hostvars[groups['master'][0]].rke2_agent_secret | to_json }}
+write-kubeconfig-mode: "0600"
+advertise-address: {{ node_ip | to_json }}
+tls-san:
+  - {{ rke2_registration_address | to_json }}
+cluster-cidr: {{ rke2_cluster_cidr | to_json }}
+service-cidr: {{ rke2_service_cidr | to_json }}
+cluster-dns: {{ rke2_cluster_dns | to_json }}
+cni: {{ rke2_cni | to_json }}
+ingress-controller: traefik
+node-taint:
+  - "node-role.kubernetes.io/control-plane=true:NoSchedule"
+etcd-snapshot-schedule-cron: {{ rke2_snapshot_cron | to_json }}
+etcd-snapshot-retention: {{ rke2_snapshot_retention }}
+etcd-snapshot-compress: true
+{% for key, value in rke2_s3.items() %}
+{{ key }}: {{ value | to_json }}
+{% endfor %}
+{% endif %}

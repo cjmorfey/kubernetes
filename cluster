@@ -6,11 +6,12 @@ export ANSIBLE_CONFIG="$ROOT/ansible.cfg"
 export ANSIBLE_LOCAL_TEMP="${ANSIBLE_LOCAL_TEMP:-${TMPDIR:-/tmp}/kubernetes-ansible-$UID}"
 usage() {
   cat <<'HELP'
-Usage: ./cluster [setup|check|status|kubeconfig] [Ansible options]
-  setup       Prepare clean Ubuntu nodes, create the cluster, verify readiness (default)
+Usage: ./cluster [setup|check|status|kubeconfig|backup] [Ansible options]
+  setup       Install pinned RKE2 on clean Ubuntu nodes and verify readiness (default)
   check       Validate inventory and playbook syntax locally; no SSH or changes
   status      Show nodes and pods through the master; no cluster changes
   kubeconfig  Save admin kubeconfig to .local/kubeconfig with mode 0600
+  backup      Create an etcd snapshot on the first server (and S3 when configured)
 Examples:
   ./cluster setup -u ubuntu -K
   ./cluster setup -u ubuntu --private-key ~/.ssh/lab
@@ -22,7 +23,7 @@ action="${1:-setup}"
 if [[ $# -gt 0 ]]; then shift; fi
 case "$action" in
   -h|--help|help) usage; exit 0 ;;
-  setup|check|status|kubeconfig) ;;
+  setup|check|status|kubeconfig|backup) ;;
   *) usage >&2; exit 2 ;;
 esac
 for command in ansible-playbook ansible-inventory; do
@@ -35,10 +36,12 @@ inventory="${CLUSTER_INVENTORY:-$ROOT/kube-cluster/hosts-ubuntu}"
 case "$action" in
   check)
     ansible-inventory -i "$inventory" --graph "$@"
+    ansible-playbook -i "$inventory" "$ROOT/kube-cluster/ansible-playbook/validate.yml" "$@"
     exec ansible-playbook -i "$inventory" "$ROOT/kube-cluster/ansible-playbook/cluster.yml" --syntax-check "$@"
     ;;
   setup) playbook=cluster ;;
   status) playbook=status ;;
   kubeconfig) playbook=kubeconfig ;;
+  backup) playbook=backup ;;
 esac
 exec ansible-playbook -i "$inventory" "$ROOT/kube-cluster/ansible-playbook/$playbook.yml" "$@"

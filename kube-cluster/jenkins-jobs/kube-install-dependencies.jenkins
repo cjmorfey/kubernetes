@@ -1,12 +1,12 @@
 #!groovy
-// Optional preparation only; normally use K8S_create_cluster.jenkins.
+// Compatibility entry point: RKE2 manages dependencies as part of full setup.
 pipeline {
     agent { label 'controller' }
     options { disableConcurrentBuilds(); timestamps() }
     stages {
-        stage('Prepare Ubuntu nodes') {
+        stage('Create or verify RKE2 cluster') {
             steps {
-                sh 'ansible-playbook -i kube-cluster/hosts-ubuntu kube-cluster/ansible-playbook/preparation-steps-ubuntu.yml'
+                sh './cluster setup'
             }
         }
     }
