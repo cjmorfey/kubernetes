@@ -1,0 +1,34 @@
+---
+- name: Validate inventory and RKE2 settings locally before SSH
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Require valid server and agent groups
+      ansible.builtin.assert:
+        that:
+          - groups.get('master', []) | length in [1, 3, 5]
+          - groups.get('workers', []) | length > 0
+          - groups.get('k8s', []) | length > 0
+          - groups.get('master', []) | intersect(groups.get('workers', [])) | length == 0
+          - groups.get('k8s', []) | sort == (groups.get('master', []) + groups.get('workers', [])) | sort
+        fail_msg: Require 1, 3 or 5 servers in master, at least one worker, and k8s containing exactly those two groups.
+
+    - name: Require a pinned release and explicit registration endpoint
+      ansible.builtin.assert:
+        that:
+          - rke2_version is match('^v[0-9]+\.[0-9]+\.[0-9]+\+rke2r[0-9]+$')
+          - rke2_installer_sha256 is match('^[0-9a-f]{64}$')
+          - rke2_registration_address is match('^[a-zA-Z0-9.-]+$')
+          - not rke2_require_ha | bool or groups['master'] | length >= 3
+          - rke2_cni == 'canal'
+          - rke2_snapshot_retention | int > 0
+        fail_msg: Pin RKE2 and its installer. An HA policy requires at least three servers and an externally managed registration endpoint.
+
+    - name: Require a separate registration endpoint for multi-server installations
+      ansible.builtin.assert:
+        that: rke2_registration_address != (hostvars[item].ansible_host | default(item))
+        fail_msg: Configure an external HA endpoint instead of a single server address for a multi-server cluster.
+      loop: "{{ groups['master'] }}"
+      when: groups['master'] | length > 1

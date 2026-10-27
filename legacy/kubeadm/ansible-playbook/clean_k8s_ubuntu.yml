@@ -1,0 +1,39 @@
+---
+# Destructive maintenance only. Never called by cluster setup.
+- name: Explicitly reset an Ubuntu kubeadm cluster
+  hosts: k8s
+  become: true
+  any_errors_fatal: true
+  gather_facts: false
+  pre_tasks:
+    - name: Require explicit reset acknowledgement
+      ansible.builtin.assert:
+        that: confirm_cluster_reset | default(false) | bool
+        fail_msg: 'This deletes cluster state and etcd data. To reset intentionally, pass -e confirm_cluster_reset=true.'
+  tasks:
+    - name: Reset kubeadm state
+      ansible.builtin.command: kubeadm reset --force --cri-socket=unix:///run/containerd/containerd.sock
+      changed_when: true
+
+    - name: Stop kubelet after reset
+      ansible.builtin.systemd:
+        name: kubelet
+        state: stopped
+        enabled: false
+
+    - name: Remove stale CNI and cluster credentials
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/cni/net.d
+        - /var/lib/cni
+        - /run/flannel
+        - /etc/kubernetes
+        - /var/lib/etcd
+        - /root/.kube
+        - /root/kube-flannel.yml
+
+    - name: Explain remaining network state
+      ansible.builtin.debug:
+        msg: 'kubeadm state removed. General firewall rules were preserved. Reboot reset nodes before rebuilding to clear stale CNI interfaces and transient network state.'

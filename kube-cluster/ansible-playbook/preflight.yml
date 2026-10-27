@@ -1,0 +1,124 @@
+---
+- name: Validate all nodes before installing Kubernetes
+  hosts: k8s
+  become: true
+  any_errors_fatal: true
+  tasks:
+    - name: Check OS, resources and service manager
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.distribution == 'Ubuntu'
+          - ansible_facts.distribution_version in ['22.04', '24.04']
+          - ansible_facts.service_mgr == 'systemd'
+          - ansible_facts.memtotal_mb | int >= 3500
+          - inventory_hostname not in groups['master'] or ansible_facts.processor_vcpus | int >= 2
+          - inventory_hostname is match('^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$')
+          - inventory_hostname | length <= 253
+        fail_msg: Require Ubuntu 22.04/24.04, systemd, 4 GiB RAM and 2 CPUs on servers; use DNS-compatible inventory names.
+
+    - name: Report single-server availability limit
+      ansible.builtin.debug:
+        msg: 'One RKE2 server is not HA. For fault tolerance configure three servers plus a redundant external LB on 9345/6443; set rke2_require_ha=true.'
+      run_once: true
+      when: groups['master'] | length == 1
+
+    - name: Reject existing kubeadm or K3s installations
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: [/etc/kubernetes/kubelet.conf, /etc/kubernetes/admin.conf, /var/lib/etcd, /etc/rancher/k3s, /var/lib/rancher/k3s]
+      register: conflicting_installation
+
+    - name: Require clean nodes or a cluster managed by this project
+      ansible.builtin.assert:
+        that: not item.stat.exists
+        fail_msg: 'Existing Kubernetes state found at {{ item.item }}. Back up/migrate workloads and rebuild Ubuntu; setup does not migrate or reset another distribution.'
+      loop: "{{ conflicting_installation.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Inspect RKE2 role marker
+      ansible.builtin.stat:
+        path: /etc/rancher/rke2/ansible-role
+      register: rke2_role_file
+
+    - name: Read existing managed role
+      ansible.builtin.slurp:
+        src: /etc/rancher/rke2/ansible-role
+      register: existing_role
+      when: rke2_role_file.stat.exists
+
+    - name: Reject in-place server/agent role changes
+      ansible.builtin.assert:
+        that: existing_role.content | b64decode | trim == ('server' if inventory_hostname in groups['master'] else 'agent')
+        fail_msg: Changing an installed node role requires an explicit drain, removal, and rebuild.
+      when: rke2_role_file.stat.exists
+
+    - name: Inspect existing RKE2 state and configuration
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: [/var/lib/rancher/rke2, /etc/rancher/rke2/config.yaml]
+      register: rke2_existing_state
+
+    - name: Reject unmanaged RKE2 data even if its binary was removed
+      ansible.builtin.assert:
+        that: not item.stat.exists or rke2_role_file.stat.exists
+        fail_msg: Unmanaged RKE2 state found. Review or rebuild the host instead of overwriting cluster data.
+      loop: "{{ rke2_existing_state.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Validate optional snapshot configuration keys
+      ansible.builtin.assert:
+        that:
+          - rke2_s3.keys() | difference(['etcd-s3', 'etcd-s3-endpoint', 'etcd-s3-endpoint-ca', 'etcd-s3-access-key', 'etcd-s3-secret-key', 'etcd-s3-bucket', 'etcd-s3-region', 'etcd-s3-folder', 'etcd-s3-retention']) | length == 0
+        fail_msg: Only supported etcd S3 options belong in rke2_s3; do not override general server config here.
+      run_once: true
+
+    - name: Read existing RKE2 binary version
+      ansible.builtin.command: "{{ rke2_binary }} --version"
+      register: existing_rke2
+      changed_when: false
+      failed_when: false
+
+    - name: Reject adoption of an unmanaged existing RKE2 installation
+      ansible.builtin.assert:
+        that: existing_rke2.rc != 0 or rke2_role_file.stat.exists
+        fail_msg: Existing RKE2 is not managed by this repository. Review and migrate it explicitly; setup does not adopt it.
+
+    - name: Refuse implicit RKE2 upgrades or downgrades
+      ansible.builtin.assert:
+        that: existing_rke2.rc != 0 or rke2_version in existing_rke2.stdout.split()
+        fail_msg: Existing RKE2 version differs. Follow docs/operations.md for a controlled upgrade; setup never upgrades binaries.
+
+    - name: Select the existing LAN address without requiring DNS on clean nodes
+      ansible.builtin.set_fact:
+        node_ip: "{{ cluster_node_ip | default(ansible_host if ansible_host | default('') is match('^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$') else ansible_facts.default_ipv4.address) }}"
+
+    - name: Check that node IP is assigned locally
+      ansible.builtin.assert:
+        that: node_ip in ansible_facts.all_ipv4_addresses
+        fail_msg: Set cluster_node_ip to this node's existing LAN IPv4 address.
+
+    - name: Verify unique node IPs and machine identities
+      ansible.builtin.assert:
+        that:
+          - groups['k8s'] | map('extract', hostvars, 'node_ip') | unique | length == groups['k8s'] | length
+          - groups['k8s'] | map('extract', hostvars, ['ansible_facts', 'machine_id']) | unique | length == groups['k8s'] | length
+        fail_msg: Nodes must have unique IPs and machine IDs. Regenerate machine IDs on cloned Ubuntu images.
+      run_once: true
+
+    - name: Check for an active UFW firewall
+      ansible.builtin.command: ufw status
+      register: node_ufw
+      changed_when: false
+      failed_when: node_ufw.rc not in [0, 2] and 'No such file' not in (node_ufw.msg | default(''))
+
+    - name: Report firewall prerequisites
+      ansible.builtin.debug:
+        msg: 'UFW is active: allow TCP 9345/6443/10250/9099, UDP 8472, server-to-server etcd and routed pod traffic. See README.'
+      when: "'Status: active' in node_ufw.stdout | default('')"
+
+    - name: Test worker connectivity to the master address
+      ansible.builtin.command: "ip route get {{ hostvars[groups['master'][0]].node_ip }}"
+      changed_when: false
+      when: inventory_hostname in groups['workers']

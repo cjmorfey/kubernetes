@@ -1,0 +1,4 @@
+.local/
+*.retry
+__pycache__/
+.venv/

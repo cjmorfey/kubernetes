@@ -1,0 +1,39 @@
+---
+- name: Verify expected cluster members and system services
+  hosts: master[0]
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Wait for each expected node to become Ready
+      ansible.builtin.command:
+        argv:
+          - "{{ rke2_kubectl }}"
+          - "--kubeconfig={{ rke2_kubeconfig }}"
+          - wait
+          - --for=condition=Ready
+          - "node/{{ item }}"
+          - --timeout=300s
+      loop: "{{ groups['k8s'] }}"
+      register: expected_node
+      until: expected_node.rc == 0
+      retries: 6
+      delay: 10
+      changed_when: false
+
+    - name: Wait for Canal on all nodes
+      ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} -n kube-system rollout status daemonset/rke2-canal --timeout=300s"
+      changed_when: false
+
+    - name: Wait for CoreDNS
+      ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} -n kube-system rollout status deployment/rke2-coredns-rke2-coredns --timeout=300s"
+      changed_when: false
+
+    - name: Show node addresses and versions
+      ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} get nodes -o wide"
+      register: ready_nodes
+      changed_when: false
+
+    - name: Print result
+      ansible.builtin.debug:
+        msg: "{{ ready_nodes.stdout_lines }}"

@@ -1,0 +1,48 @@
+---
+- name: Bootstrap the first RKE2 server
+  hosts: master[0]
+  become: true
+  any_errors_fatal: true
+  tasks:
+    - name: Generate a separate persistent agent credential once
+      ansible.builtin.shell: umask 077; openssl rand -hex 32 > /etc/rancher/rke2/agent-secret
+      args:
+        creates: /etc/rancher/rke2/agent-secret
+      no_log: true
+
+    - name: Read persistent agent secret
+      ansible.builtin.slurp:
+        src: /etc/rancher/rke2/agent-secret
+      register: agent_secret
+      no_log: true
+
+    - name: Keep agent secret in memory for server configuration
+      ansible.builtin.set_fact:
+        rke2_agent_secret: "{{ agent_secret.content | b64decode | trim }}"
+      no_log: true
+
+    - name: Configure and start the bootstrap server
+      ansible.builtin.include_tasks: tasks/configure-node.yml
+
+    - name: Read CA-bound server and agent join tokens
+      ansible.builtin.slurp:
+        src: "/var/lib/rancher/rke2/server/{{ item }}"
+      loop: [token, agent-token]
+      register: rke2_tokens
+      no_log: true
+
+    - name: Keep secure join tokens in memory
+      ansible.builtin.set_fact:
+        rke2_join_token: "{{ rke2_tokens.results[0].content | b64decode | trim }}"
+        rke2_agent_join_token: "{{ rke2_tokens.results[1].content | b64decode | trim }}"
+      no_log: true
+
+- name: Join additional RKE2 servers sequentially
+  hosts: master
+  become: true
+  serial: 1
+  any_errors_fatal: true
+  tasks:
+    - name: Configure and start the next server
+      ansible.builtin.include_tasks: tasks/configure-node.yml
+      when: inventory_hostname != groups['master'][0]

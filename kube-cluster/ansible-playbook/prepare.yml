@@ -1,0 +1,98 @@
+---
+- name: Prepare Ubuntu for the RKE2 managed runtime
+  hosts: k8s
+  become: true
+  any_errors_fatal: true
+  tasks:
+    - name: Install host prerequisites without a standalone container runtime
+      ansible.builtin.apt:
+        name: [ca-certificates, curl, openssl, tar, iptables, apparmor, apparmor-utils, python3-apt]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Disable active swap
+      ansible.builtin.command: swapoff -a
+      when: ansible_facts.swaptotal_mb | int > 0
+
+    - name: Disable swap after reboot
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^(\s*[^#\s]+\s+\S+\s+swap\s+.*)$'
+        replace: '# Disabled for RKE2: \1'
+
+    - name: Persist required modules
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/rke2.conf
+        mode: '0644'
+        content: |
+          overlay
+          br_netfilter
+
+    - name: Load required modules
+      ansible.builtin.command: "modprobe {{ item }}"
+      loop: [overlay, br_netfilter]
+      changed_when: false
+
+    - name: Persist RKE2 network settings
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/90-rke2.conf
+        mode: '0644'
+        content: |
+          net.bridge.bridge-nf-call-iptables = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.ipv4.ip_forward = 1
+      register: rke2_sysctl
+
+    - name: Apply changed RKE2 settings only
+      ansible.builtin.command: sysctl -p /etc/sysctl.d/90-rke2.conf
+      when: rke2_sysctl.changed
+      changed_when: true
+
+    - name: Ignore Canal interfaces in NetworkManager when installed
+      ansible.builtin.stat:
+        path: /etc/NetworkManager/conf.d
+      register: networkmanager_directory
+
+    - name: Inspect running services
+      ansible.builtin.service_facts:
+
+    - name: Keep NetworkManager away from CNI devices
+      ansible.builtin.copy:
+        dest: /etc/NetworkManager/conf.d/rke2-canal.conf
+        mode: '0644'
+        content: |
+          [keyfile]
+          unmanaged-devices=interface-name:cali*;interface-name:flannel*
+      when: networkmanager_directory.stat.exists
+      register: networkmanager_config
+
+    - name: Reload changed NetworkManager device policy without restarting networking
+      ansible.builtin.command: nmcli general reload
+      when:
+        - networkmanager_config.changed
+        - ansible_facts.services.get('NetworkManager.service', {}).get('state', '') == 'running'
+      changed_when: true
+
+    - name: Create private RKE2 configuration directory
+      ansible.builtin.file:
+        path: /etc/rancher/rke2
+        state: directory
+        mode: '0700'
+
+    - name: Download the release-pinned and checksum-verified installer
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/rancher/rke2/{{ rke2_version | urlencode }}/install.sh"
+        checksum: "sha256:{{ rke2_installer_sha256 }}"
+        dest: /usr/local/sbin/install-rke2.sh
+        mode: '0700'
+
+    - name: Install pinned RKE2 release on new nodes
+      ansible.builtin.command:
+        cmd: /bin/sh /usr/local/sbin/install-rke2.sh
+        creates: "{{ rke2_binary }}"
+      environment:
+        INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+        INSTALL_RKE2_TYPE: "{{ 'server' if inventory_hostname in groups['master'] else 'agent' }}"
+        INSTALL_RKE2_METHOD: tar
+        INSTALL_RKE2_TAR_PREFIX: /usr/local

@@ -1,32 +1,20 @@
-- hosts: all
-  become: yes
+---
+- name: Update Ubuntu hosts one at a time
+  hosts: k8s
+  become: true
+  serial: 1
   tasks:
-    - name: Update package cache and upgrade all packages
-      raw: |
-        apt-get update && apt-get upgrade -y
+    - name: Update Ubuntu packages while respecting Kubernetes holds
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: safe
 
-    - name: Check if kernel update requires reboot
-      shell: |
-        latest_kernel=$(dpkg -l | grep linux-image | awk '{print $2}' | sort -V | tail -n 1)
-        current_kernel=$(uname -r)
-        if [ "$latest_kernel" != "$current_kernel" ]; then
-          echo "reboot_needed"
-        else
-          echo "no_reboot"
-        fi
-      register: reboot_hint
-      changed_when: false
+    - name: Check Ubuntu reboot marker
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: ubuntu_reboot
 
-    - name: Set reboot_needed fact
-      set_fact:
-        reboot_needed: "{{ 'reboot_needed' in reboot_hint.stdout }}"
-
-    - name: Reboot the servers if needed
-      reboot:
-        reboot_timeout: 60
-      when: reboot_needed
-
-    - name: Wait for servers to be reachable
-      wait_for_connection:
-        delay: 10
-        timeout: 180
+    - name: Report required maintenance
+      ansible.builtin.debug:
+        msg: 'Reboot required. Drain this node before rebooting an active cluster.'
+      when: ubuntu_reboot.stat.exists

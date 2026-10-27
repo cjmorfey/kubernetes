@@ -1,24 +1,11 @@
 #!groovy
-// Install master
-properties([disableConcurrentBuilds()])
+// Compatibility job: always run the orchestrator, including clean-node preparation.
 pipeline {
-    agent {
-        label 'controller'
-    }
-    options {
-        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
-        timestamps()
-        ansiColor("xterm")
-    }
+    agent { label 'controller' }
+    options { disableConcurrentBuilds(); timestamps() }
     stages {
-        stage('Install master K8S') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
-            steps {
-                echo " ========== Install Master Node ========= "
-                sh 'ansible-playbook kube-cluster/ansible-playbook/master.yml -i kube-cluster/hosts-ubuntu'
-            }
+        stage('Create or reconcile Ubuntu cluster') {
+            steps { sh './cluster setup' }
         }
     }
 }

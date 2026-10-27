@@ -1,0 +1,51 @@
+---
+- name: Inspect worker membership
+  hosts: workers
+  become: true
+  tasks:
+    - name: Inspect kubelet configuration
+      ansible.builtin.stat:
+        path: /etc/kubernetes/kubelet.conf
+      register: worker_config
+
+    - name: Record whether this worker needs joining
+      ansible.builtin.set_fact:
+        worker_needs_join: "{{ not worker_config.stat.exists }}"
+
+- name: Generate a short-lived join command only when needed
+  hosts: master
+  become: true
+  any_errors_fatal: true
+  tasks:
+    - name: Create join token in memory
+      ansible.builtin.command: kubeadm token create --ttl 15m --print-join-command
+      register: worker_join
+      no_log: true
+      changed_when: true
+      when: true in (groups['workers'] | map('extract', hostvars, 'worker_needs_join') | list)
+
+- name: Join workers without resetting existing nodes
+  hosts: workers
+  become: true
+  tasks:
+    - name: Join new workers and revoke temporary credentials
+      block:
+        - name: Join worker once with a deterministic node name
+          ansible.builtin.command:
+            cmd: "{{ hostvars[groups['master'][0]].worker_join.stdout }} --node-name={{ inventory_hostname }} --cri-socket=unix:///run/containerd/containerd.sock"
+            creates: /etc/kubernetes/kubelet.conf
+          when: worker_needs_join
+          no_log: true
+      always:
+        - name: Revoke join token after workers finish, including failed joins
+          ansible.builtin.command:
+            argv:
+              - kubeadm
+              - token
+              - delete
+              - "{{ hostvars[groups['master'][0]].worker_join.stdout.split()[4] }}"
+          delegate_to: "{{ groups['master'][0] }}"
+          run_once: true
+          no_log: true
+          when: hostvars[groups['master'][0]].worker_join is not skipped
+          changed_when: true

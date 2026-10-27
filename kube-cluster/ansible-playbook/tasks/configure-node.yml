@@ -1,0 +1,64 @@
+---
+- name: Check registration endpoint reachability before joining
+  ansible.builtin.wait_for:
+    host: "{{ rke2_registration_address }}"
+    port: 9345
+    timeout: 120
+  when: inventory_hostname != groups['master'][0]
+
+- name: Inspect existing managed config
+  ansible.builtin.stat:
+    path: /etc/rancher/rke2/config.yaml
+  register: rke2_config_file
+
+- name: Preview configuration without exposing credentials
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../templates/rke2-config.yaml.j2"
+    dest: /etc/rancher/rke2/config.yaml
+    mode: '0600'
+  check_mode: true
+  diff: false
+  register: rke2_config_preview
+  no_log: true
+
+- name: Refuse implicit reconfiguration of installed nodes
+  ansible.builtin.assert:
+    that: not rke2_config_file.stat.exists or not rke2_config_preview.changed
+    fail_msg: RKE2 config drift detected. Setup never silently reconfigures running nodes. Review docs/operations.md.
+
+- name: Write RKE2 configuration for new nodes
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../templates/rke2-config.yaml.j2"
+    dest: /etc/rancher/rke2/config.yaml
+    mode: '0600'
+  diff: false
+  no_log: true
+
+- name: Record managed node role
+  ansible.builtin.copy:
+    dest: /etc/rancher/rke2/ansible-role
+    content: "{{ 'server' if inventory_hostname in groups['master'] else 'agent' }}\n"
+    mode: '0600'
+
+- name: Enable and start this node without restarting healthy services
+  ansible.builtin.systemd:
+    name: "rke2-{{ 'server' if inventory_hostname in groups['master'] else 'agent' }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+    no_block: true
+
+- name: Wait for server kubeconfig
+  ansible.builtin.wait_for:
+    path: "{{ rke2_kubeconfig }}"
+    timeout: 600
+  when: inventory_hostname in groups['master']
+
+- name: Wait for this server API
+  ansible.builtin.command: "{{ rke2_kubectl }} --kubeconfig={{ rke2_kubeconfig }} get --raw=/readyz"
+  register: server_api
+  until: server_api.rc == 0
+  retries: 60
+  delay: 10
+  changed_when: false
+  when: inventory_hostname in groups['master']

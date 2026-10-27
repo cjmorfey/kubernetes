@@ -1,0 +1,99 @@
+---
+# Render the real production template against three inventory roles without installing anything.
+- name: Verify RKE2 config semantics
+  hosts: k8s
+  connection: local
+  gather_facts: false
+  vars:
+    node_ip: "{{ '192.0.2.10' if inventory_hostname == groups['master'][0] else '192.0.2.11' }}"
+    rke2_join_token: K10testca::server:server-secret
+    rke2_agent_join_token: K10testca::agent:agent-secret
+    rke2_agent_secret: agent-secret
+  pre_tasks:
+    - name: Seed simulated bootstrap facts as the server playbook does
+      ansible.builtin.set_fact:
+        rke2_join_token: K10testca::server:server-secret
+        rke2_agent_join_token: K10testca::agent:agent-secret
+        rke2_agent_secret: agent-secret
+      no_log: true
+  tasks:
+    - name: Render actual node template into an isolated directory
+      ansible.builtin.template:
+        src: ../kube-cluster/templates/rke2-config.yaml.j2
+        dest: "{{ test_directory }}/{{ inventory_hostname }}.yaml"
+        mode: '0600'
+      no_log: true
+
+    - name: Render again to check configuration stability
+      ansible.builtin.template:
+        src: ../kube-cluster/templates/rke2-config.yaml.j2
+        dest: "{{ test_directory }}/{{ inventory_hostname }}.yaml"
+        mode: '0600'
+      register: second_render
+      no_log: true
+
+    - name: Require an unchanged second render
+      ansible.builtin.assert:
+        that: not second_render.changed
+
+    - name: Read rendered config
+      ansible.builtin.slurp:
+        src: "{{ test_directory }}/{{ inventory_hostname }}.yaml"
+      register: rendered
+      no_log: true
+
+    - name: Parse rendered YAML
+      ansible.builtin.set_fact:
+        config: "{{ rendered.content | b64decode | from_yaml }}"
+      no_log: true
+
+    - name: Verify node identity
+      ansible.builtin.assert:
+        that:
+          - config['node-name'] == inventory_hostname
+          - config['node-ip'] == node_ip
+
+    - name: Verify first server bootstraps without a self-join
+      ansible.builtin.assert:
+        that:
+          - "'server' not in config"
+          - "'token' not in config"
+      when: inventory_hostname == groups['master'][0]
+
+    - name: Verify joined server receives the server credential
+      ansible.builtin.assert:
+        that:
+          - config['token'] == rke2_join_token
+          - config['server'] == 'https://' + rke2_registration_address + ':9345'
+      when: inventory_hostname in groups['master'] and inventory_hostname != groups['master'][0]
+      no_log: true
+
+    - name: Verify server-only network and snapshot settings
+      ansible.builtin.assert:
+        that:
+          - config['agent-token'] == rke2_agent_secret
+          - config['cluster-cidr'] == rke2_cluster_cidr
+          - config['service-cidr'] == rke2_service_cidr
+          - config['cluster-dns'] == rke2_cluster_dns
+          - config['cni'] == 'canal'
+          - config['ingress-controller'] == 'traefik'
+          - config['write-kubeconfig-mode'] == '0600'
+          - config['etcd-snapshot-retention'] == rke2_snapshot_retention
+          - config['etcd-snapshot-compress'] == true
+          - config['etcd-s3-bucket'] == 'test-bucket'
+          - config['etcd-s3-secret-key'] == 'fake-s3-secret'
+      when: inventory_hostname in groups['master']
+      no_log: true
+
+    - name: Verify agents cannot join as servers and receive no server-only settings
+      ansible.builtin.assert:
+        that:
+          - config['token'] == rke2_agent_join_token
+          - config['token'] != rke2_join_token
+          - config['server'] == 'https://' + rke2_registration_address + ':9345'
+          - "'agent-token' not in config"
+          - "'etcd-snapshot-retention' not in config"
+          - "'cluster-cidr' not in config"
+          - "'etcd-s3-secret-key' not in config"
+      when: inventory_hostname in groups['workers']
+      no_log: true
