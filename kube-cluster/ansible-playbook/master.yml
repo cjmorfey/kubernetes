@@ -1,91 +1,52 @@
-- hosts: master
-  become: yes
-  vars:
-    master_ip: "192.168.1.95"
-
+---
+- name: Initialize control plane
+  hosts: master
+  become: true
   tasks:
-    - name: Initialize the cluster
-      shell: kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=SystemVerification
-      args:
-        chdir: $HOME
-      register: init_output
-      failed_when: "'error' in init_output.stderr or init_output.rc != 0"
+    - name: Verify that the original control-plane IP belongs to this host
+      ansible.builtin.assert:
+        that: master_ip in ansible_facts.all_ipv4_addresses
+        fail_msg: The master must retain its original IP address.
 
-    - name: Save initialization output to a file
-      copy:
-        content: "{{ init_output.stdout }}"
-        dest: /root/cluster_initialized.txt
-        mode: 0644  
+    - name: Initialize Kubernetes once
+      ansible.builtin.command:
+        argv:
+          - kubeadm
+          - init
+          - "--apiserver-advertise-address={{ master_ip }}"
+          - "--control-plane-endpoint={{ master_ip }}:6443"
+          - "--pod-network-cidr={{ pod_network_cidr }}"
+          - --cri-socket=unix:///run/containerd/containerd.sock
+        creates: /etc/kubernetes/admin.conf
 
-    - name: Create .kube directory
-      file:
+    - name: Create root kubeconfig directory
+      ansible.builtin.file:
         path: /root/.kube
         state: directory
-        mode: 0755
+        mode: '0700'
 
-    - name: Copy admin.conf to user's kube config
-      copy:
+    - name: Install private root kubeconfig
+      ansible.builtin.copy:
         src: /etc/kubernetes/admin.conf
         dest: /root/.kube/config
-        remote_src: yes
+        remote_src: true
         owner: root
-        mode: 0644
+        group: root
+        mode: '0600'
 
-    - name: Synchronize config to the remote hosts
-      shell: rsync -acP /root/.kube/ /opt/kuber-volume/.kube/
+    - name: Download pinned Flannel manifest
+      ansible.builtin.get_url:
+        url: "https://github.com/flannel-io/flannel/releases/download/{{ flannel_version }}/kube-flannel.yml"
+        dest: /root/kube-flannel.yml
+        mode: '0600'
 
-    - name: Install Pod network with Flannel
-      shell: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
-      args:
-        chdir: $HOME
-      register: flannel_output
-      failed_when: "'error' in flannel_output.stderr or flannel_output.rc != 0"
+    - name: Configure Flannel pod CIDR
+      ansible.builtin.replace:
+        path: /root/kube-flannel.yml
+        regexp: '"Network": "[^"]+"'
+        replace: '"Network": "{{ pod_network_cidr }}"'
 
-    - name: Save Pod network setup log
-      copy:
-        content: "{{ flannel_output.stdout }}"
-        dest: /root/pod_network_setup.txt
-        mode: 0644
-
-    - name: Generate kubeadm join token
-      shell: kubeadm token create --print-join-command
-      register: join_command_output
-
-    - name: Extract token and hash from join command
-      set_fact:
-        join_command: "{{ join_command_output.stdout }}"
-        token: "{{ join_command.split(' ')[4] }}"
-        ca_hash: "{{ join_command.split(' ')[6].split(':')[-1] }}"
-      
-    - name: Save join variables to hostvars
-      set_fact:
-        worker_join_vars:
-          master_ip: "{{ master_ip }}"
-          token: "{{ join_command.split(' ')[4] }}"
-          ca_hash: "{{ join_command.split(' ')[6].split(':')[-1] }}"
-      delegate_to: localhost
-
-    - name: Display master IP in console
-      debug:
-        msg: "The master IP is: {{ master_ip }}"
-      delegate_to: localhost 
-
-- hosts: workers
-  become: yes
-  vars:
-    master_ip: "{{ master_ip | default('192.168.1.95') }}"
-
-  tasks:
-    - name: Synchronize kube config
-      shell: rsync -acP /opt/kuber-volume/.kube/ $HOME/.kube/
-
-    - name: Join worker nodes to the cluster
-      shell: kubeadm join {{ master_ip }}:6443 --token {{ hostvars[groups['master'][0]]['worker_join_vars']['token'] }} --discovery-token-ca-cert-hash sha256:{{ hostvars[groups['master'][0]]['worker_join_vars']['ca_hash'] }}
-      register: join_output
-      failed_when: "'error' in join_output.stderr or join_output.rc != 0"
-
-    - name: Save join output to a file
-      copy:
-        content: "{{ join_output.stdout }}"
-        dest: /root/node_joined.txt
-        mode: 0644
+    - name: Apply Flannel network
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /root/kube-flannel.yml
+      register: flannel_apply
+      changed_when: "'created' in flannel_apply.stdout or 'configured' in flannel_apply.stdout"

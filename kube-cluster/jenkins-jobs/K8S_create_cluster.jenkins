@@ -1,36 +1,22 @@
 #!groovy
-// install K8S Cluster
-properties([disableConcurrentBuilds()])
+// Jenkins agent requires Ansible and SSH/sudo access to the Ubuntu inventory.
 pipeline {
-    agent {
-        label 'controller'
-    }
+    agent { label 'controller' }
     options {
-        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        disableConcurrentBuilds()
         timestamps()
-        ansiColor("xterm")
+        buildDiscarder(logRotator(numToKeepStr: '10'))
     }
     stages {
-        stage('Ping cluster') {
-            environment {
-                ANSIBLE_FORCE_COLOR = true
-            }
+        stage('Validate Ubuntu cluster playbook') {
             steps {
-                echo "-==========-PING-HOSTS-==========-"
-                sh 'ansible-playbook kube-cluster/ansible-playbook/ping.yml -i kube-cluster/hosts'
+                sh 'ansible-playbook -i kube-cluster/hosts-ubuntu kube-cluster/ansible-playbook/cluster.yml --syntax-check'
             }
         }
-        stage('Preparations') {
+        stage('Bootstrap Ubuntu cluster') {
             steps {
-                echo "-==========-Install Dependencies-==========-"
-                build job: 'Install_dependencies_k8s', quietPeriod: 0
+                sh 'ansible-playbook -i kube-cluster/hosts-ubuntu kube-cluster/ansible-playbook/cluster.yml'
             }
         }
-        stage('Install master K8S') {
-            steps {
-                echo "-==========-Install Master Node-==========-"
-                build job: 'Install_Master-node-k8s', quietPeriod: 0
-            }
-         }
     }
 }
